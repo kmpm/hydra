@@ -1,0 +1,15 @@
+{
+  "name": "hydra",
+  "version": "0.0.1",
+  "description": "Event Logger",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha"
+  },
+  "author": "Peter Magnusson <peter.magnusson@mustad.se>",
+  "license": "BSD",
+  "dependencies": {
+    "amqp": ">=0.1.3",
+    "mongodb": ">=1.1.7"
+  }
+}
