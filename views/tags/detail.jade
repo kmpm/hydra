@@ -1,0 +1,11 @@
+extends ../layout
+
+block content
+  form(method="post", action=".")
+    dl.dl-horizontal
+      for field in tagform.fields
+        dt=field.name
+        dd!=field.render()
+    for field in tagform.hidden
+      !{field.render()}
+    input.btn(type="submit")

@@ -1,0 +1,10 @@
+extends ../layout
+
+
+block content
+  a(href="./new").btn +
+  ul
+    for tag in taglist
+      li
+        td
+          a(href="#{tag._id}/")=tag.name

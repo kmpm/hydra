@@ -4,12 +4,21 @@
   "description": "Event Logger",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "./node_modules/.bin/mocha",
+    "start": "node app"
   },
   "author": "Peter Magnusson <peter.magnusson@mustad.se>",
   "license": "BSD",
   "dependencies": {
     "amqp": ">=0.1.3",
-    "mongodb": ">=1.1.7"
+    "mongodb": ">=1.1.7",
+    "express": "~3.0.0",
+    "jade": "*",
+    "less-middleware": "*",
+    "devnull": "*"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
   }
 }
