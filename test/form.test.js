@@ -59,4 +59,15 @@ describe("Form", function(){
     f.hidden[0].name.should.equal('c');
   });
 
+  it("nested", function(){
+    var f = new forms.Form({'a':{'a1':'10', 'a2':20}, 'b':'dataB', c:'dataC'}, 
+      {order:['b'], hidden:['c']});
+
+    f.visible.should.have.length(3);
+    f.fields[0].should.have.property('title');
+    f.fields[1].title.should.equal('a a1');
+    f.fields[1].name.should.equal('a__a1');
+
+  });
+
 });

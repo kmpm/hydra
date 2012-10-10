@@ -4,7 +4,7 @@ block content
   form(method="post", action=".")
     dl.dl-horizontal
       for field in tagform.visible
-        dt=field.name
+        dt=field.title
         dd!=field.render()
     for field in tagform.hidden
       !{field.render()}
