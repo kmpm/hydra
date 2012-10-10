@@ -25,10 +25,10 @@ module.exports = function(app, prefix){
   });
 
   app.get(prefix+'new', function(req, res){
-    var doc={};
+    var doc=storage.DEFAULT_TAGMETA;
     storage.saveTagMeta(doc, function(err, result){
       if(err) return res.render(500, err);
-      res.redirect(prefix + '/' + doc._id + '/');
+      res.redirect(prefix + doc._id + '/');
     });
   });
 
