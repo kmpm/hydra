@@ -3,7 +3,7 @@ extends ../layout
 block content
   form(method="post", action=".")
     dl.dl-horizontal
-      for field in tagform.fields
+      for field in tagform.visible
         dt=field.name
         dd!=field.render()
     for field in tagform.hidden
