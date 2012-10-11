@@ -70,4 +70,20 @@ describe("Form", function(){
 
   });
 
+  it("parse", function(){
+    var f = new forms.Form({'a':{'a1':'10', 'a2':false}, 'b':'dataB', c:'dataC'}, 
+      {order:['b'], hidden:['c']});
+
+    f.fields[0].widget.should.have.property('parse');
+
+    var body = {a__a1:'q', a__a2:'true', b:'e'};
+    var obj = f.parse(body);
+    should.exist(obj);
+    obj.should.have.property('a');
+    obj.a.should.have.property('a1', 'q');
+    obj.a.should.have.property('a2', true);
+    obj.should.have.property('b', 'e');
+    obj.should.have.property('c', 'dataC');
+  })
+
 });

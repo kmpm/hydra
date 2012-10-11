@@ -1,5 +1,12 @@
 var storage = require('../lib/storage')
-  , forms = require('../lib/forms');
+  , forms = require('../lib/forms')
+  , c = require('../lib/common');
+
+
+function logerr(res, err){
+  c.log.warning(err);
+  res.send(500, err);
+}
 
 module.exports = function(app, prefix){
 
@@ -15,9 +22,7 @@ module.exports = function(app, prefix){
       cursor.toArray(render);
     });
     function render(err, list){
-      if(err){
-        return res.send(500, err);
-      }
+      if(err) return logerr(res, err);
 
       res.render('tags', {title:'Tags', taglist:list});  
     }
@@ -25,26 +30,28 @@ module.exports = function(app, prefix){
   });
 
   app.get(prefix+'new', function(req, res){
-    var doc=storage.DEFAULT_TAGMETA;
+    var doc=storage.createTag();
     storage.saveTagMeta(doc, function(err, result){
-      if(err) return res.render(500, err);
+      if(err) return logerr(res, err);
       res.redirect(prefix + doc._id + '/');
     });
   });
 
   app.all(prefix + ':id/', function(req, res){
     if(req.method==='POST'){
-      console.log(req.body);
-      load();
-      // storage.saveTagMeta(req.body, function(err, result){
-      //   if(err) return render(err);
-      //   console.log("result:", result);
-      //   load();
-      // });
-      
+      console.log("body", req.body);
+      load(function(err, form){
+        var obj = form.parse(req.body);
+        console.log("obj", obj);
+        storage.saveTagMeta(obj, function(err, result){
+          if(err) return render(err);
+          load(render);
+        });
+        
+      });
     }
     else{
-      load();
+      load(render);
     }
     
     function createForm(tag, callback){
@@ -57,10 +64,10 @@ module.exports = function(app, prefix){
       callback(null, f);
     }
 
-    function load(){
+    function load(callback){
       storage.getTagMeta(req.params.id, function(err, tag){
         if(err) return render(err);
-        createForm(tag, render);
+        createForm(tag, callback);
       });
     }
     function render(err, form){
@@ -68,14 +75,4 @@ module.exports = function(app, prefix){
       res.render('tags/detail', {tagform: form});
     }
   });
-
-
-
-
-
-
-
-
-
-
 }
