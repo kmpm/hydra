@@ -24,12 +24,12 @@ describe("routes/tags", function(){
     });
   });
 
-  describe("GET /new", function(){
-    it('it responds with HTML', function(done){
-      request(app)
-        .get("/tags/new")
-        .expect(302, done);
-    });
-  });
+  // describe("GET /new", function(){
+  //   it('it responds with HTML', function(done){
+  //     request(app)
+  //       .get("/tags/new")
+  //       .expect(302, done);
+  //   });
+  // });
 
 });

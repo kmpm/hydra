@@ -23,10 +23,8 @@ module.exports = function(app, prefix){
     });
     function render(err, list){
       if(err) return logerr(res, err);
-
       res.render('tags', {title:'Tags', taglist:list});  
     }
-    
   });
 
   app.get(prefix+'new', function(req, res){
