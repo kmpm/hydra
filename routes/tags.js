@@ -35,7 +35,9 @@ module.exports = function(app, prefix){
     });
   });
 
-  app.all(prefix + ':id/', function(req, res){
+  app.all(prefix + ':id/:action?', function(req, res){
+    var action = req.params.action || 'show';
+
     if(req.method==='POST'){
       console.log("body", req.body);
       load(function(err, form){
@@ -43,13 +45,25 @@ module.exports = function(app, prefix){
         console.log("obj", obj);
         storage.saveTagMeta(obj, function(err, result){
           if(err) return render(err);
-          load(render);
+          res.redirect(prefix);
+          //load(render);
         });
         
       });
     }
-    else{
-      load(render);
+    else {
+      switch(action){
+        case 'delete':
+          storage.removeTagMeta(req.params.id, function(err, result){
+            if(err) logerr(res, err);
+            res.redirect(prefix);
+          });
+          break;
+        default:
+          load(render);
+          break;
+      }
+      
     }
     
     function createForm(tag, callback){
@@ -73,4 +87,6 @@ module.exports = function(app, prefix){
       res.render('tags/detail', {tagform: form});
     }
   });
+
+  
 }

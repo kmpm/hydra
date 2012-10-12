@@ -3,8 +3,25 @@ extends ../layout
 
 block content
   a(href="./new").btn +
-  ul
+  table.table.table-striped
+    th Tag
+    th Beskrivning
     for tag in taglist
-      li
+      tr
         td
-          a(href="#{tag._id}/")=tag.name
+          .btn-group
+            a.btn.btn-primary(href="#{tag._id}/")
+              i.icon-tag.icon-white
+              |  #{tag.name}
+            a.btn.btn-primary.dropdown-toggle(data-toggle="dropdown", href="#")
+              span.caret
+            ul.dropdown-menu
+              li  
+                a(href="#{tag._id}/delete", title="Radera")
+                  i.icon-trash 
+                  |  Radera
+              li
+                a(href="#{tag._id}/", title="Redigera")
+                  i.icon-cog
+                  |  Redigera
+        td test
