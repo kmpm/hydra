@@ -4,7 +4,7 @@
   "description": "Event Logger",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha",
+    "test": ".\\node_modules\\.bin\\_mocha",
     "start": "node app"
   },
   "author": "Peter Magnusson <peter.magnusson@mustad.se>",
@@ -15,7 +15,8 @@
     "express": "~3.0.0",
     "jade": "*",
     "less-middleware": "*",
-    "devnull": "*"
+    "devnull": "*",
+    "nconf": "*"
   },
   "devDependencies": {
     "mocha": "*",
