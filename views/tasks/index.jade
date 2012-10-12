@@ -1,0 +1,11 @@
+extends ../layout
+
+
+block content
+  table.table.table-striped
+    for task in tasklist
+      tr
+        td
+          span.caret
+          a(href="./#{task.name}")=task.name
+        td=task.status

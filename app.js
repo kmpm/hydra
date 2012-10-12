@@ -9,6 +9,9 @@ var express = require('express')
   , http = require('http')
   , path = require('path');
 
+var Bus = require('./lib/bus');
+var bus = new Bus();
+
 var app = express();
 
 app.configure(function(){
@@ -36,6 +39,7 @@ app.locals.title = 'Hydra';
 app.get('/', routes.index);
 app.get('/users', user.list);
 require('./routes/tags')(app, '/tags/');
+require('./routes/tasks')(app, '/tasks/');
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));

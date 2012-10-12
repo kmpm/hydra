@@ -31,7 +31,7 @@ describe("Bus", function(){
 
   describe("Messages", function(){
     before(function(done){
-      exchange.publish("rpc.server.foo", {method:'foo', options:{'bar':'spam'}}, 
+      exchange.publish("rpc.server.test", {method:'getFuncCv', options:{}}, 
         {correlationId:Date.now().toString(), replyTo: 'hydra-test'}, function(err){
         if(err) console.log(err);
 
