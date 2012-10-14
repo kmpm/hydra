@@ -2,17 +2,33 @@ var amqp = require('amqp')
   , Logger = require('devnull')
   , vm = require('vm');
 
-
-
-
-var numerics = require('./lib/numerics');
-
-var MQ_HOST = 'hydra.mustad.se';
-
-var STORAGE_PORT=6379;
-var STORAGE_HOST='bruxsvr01.mustad.se';
-
 var WAITFOR=2;
+
+var DEFAULTS = {
+  mongo:{
+    host:'localhost',
+    port: 27017,
+    dbname: 'hydra'}, 
+  amqp:{
+    host:'localhost',
+    vhost:'/',
+    exchange:'hydra.topic'
+  }
+}
+
+var nconf = require('nconf');
+
+nconf.argv()
+  .file('config.json')
+  .defaults(DEFAULTS);
+
+
+var numerics = require('./lib/numerics')
+  , Storage = require('./lib/storage');
+
+
+
+var MQ_HOST = nconf.get("amqp:host");
 
 var log = new Logger();
 
@@ -26,7 +42,7 @@ log.use(require('devnull/transports/stream'), {
 var mq = amqp.createConnection({host:MQ_HOST});
 var queue;
 var exchange;
-var fcache;
+var fcache={};
 
 var rpc = new (require('./lib/amqprpc'))(mq);
 
@@ -42,11 +58,15 @@ mq.on("ready", function(){
 });
 
 
-
+var storage = new Storage(nconf.get('mongo'));
+storage.on("ready", function(){
+  log.info("storage is ready");
+  main();
+});
 
 
 function ensureExchange(callback){
-  mq.exchange('hydra.topic', {type:'topic', durable:true}, callback);
+  mq.exchange(nconf.get("amqp:exchange"), {type:'topic', durable:true}, callback);
 }
 
 function ensureQueue(exchange, callback){
@@ -62,32 +82,25 @@ function queueProcessor(message, headers, deliveryInfo) {
     
     var cv = currentValue(message);
     log.debug("key:%s raw:%s cv:%s", message.key, message.raw, cv);
-    var at = (new Date()).toJSON();
-    var data=['hydra:' + message.key, 'at', at];
-    data.push('raw');
-    data.push(message.raw);
-    var status='ok';
+    var doc = {raw:message.raw, status:'ok'};
+
     if(cv){
-      data.push('cv');
-      data.push(cv);
+      doc.cv = cv;
     }
     else{
-      status='bad data';
+      doc.status='bad data';
     }
-    data.push('status');
-    data.push(status);
-    message.status = status;
-    storage.hmset(data, function(err, res){
-      if(err){
-        log.error(err);
-      }
-      if (cv) {
+    
+    storage.set(message.key, doc, function(err, res){
+      if(err){ log.error(err); }
+      if(cv) {
         message.cv = cv;
+        message.status=doc.status;
         exchange.publish('cv.'  + message.key, message);
       }else{
         exchange.publish('error.' + message.key, message);
       }
-    });  
+    });
   }
   else{
     log.warning("bad raw:", message);
@@ -96,7 +109,16 @@ function queueProcessor(message, headers, deliveryInfo) {
 
 function loadCache(){
   rpc.makeRequest(exchange, 'rpc.server', {method:'getFuncCv', options:{}}, function(err, result){
-    console.log(result);
+    if(result.status == 200){
+      fcache = {};
+      result.body.forEach(function(t){
+        fcache[t.name] = t.func_cv;
+      });
+      console.log("fcache=", fcache);
+    }
+    else {
+      c.log.error("error getting cache", result);
+    }
   });
 }
 
@@ -112,7 +134,7 @@ function currentValue(message){
     catch(err){
       log.error("vm error!", err);
     }
-    log.debug(sandbox, code);
+    //log.debug(sandbox, code);
     return sandbox.callback(message.raw);
   }
   else{

@@ -9,6 +9,10 @@ function logerr(res, err){
 }
 
 module.exports = function(app, prefix){
+  app.all(prefix, function(req, res, next){
+    res.locals.title='Tags';
+    next();
+  });
 
   app.get(prefix + '*', function (req, res, next){
     next();
@@ -23,7 +27,7 @@ module.exports = function(app, prefix){
     });
     function render(err, list){
       if(err) return logerr(res, err);
-      res.render('tags', {title:'Tags', taglist:list});  
+      res.render('tags', { taglist:list});  
     }
   });
 
@@ -67,7 +71,7 @@ module.exports = function(app, prefix){
     }
     
     function createForm(tag, callback){
-      var f = new forms.Form(tag, {hidden:['_id'], 
+      var f = new forms.Form(tag, {hidden:['_id'], exclude:['raw', 'cv', 'status'],
           widgets:{'func_cv': new forms.TextAreaWidget({"class":'span7'})},
           order:['name'],
           //exclude:['cosm']

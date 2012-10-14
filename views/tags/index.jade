@@ -5,7 +5,8 @@ block content
   a(href="./new").btn +
   table.table.table-striped
     th Tag
-    th Beskrivning
+    th Status
+    th Aktuellt värde
     for tag in taglist
       tr
         td
@@ -24,4 +25,5 @@ block content
                 a(href="#{tag._id}/", title="Redigera")
                   i.icon-cog
                   |  Redigera
-        td test
+        td=tag.status
+        td=tag.cv

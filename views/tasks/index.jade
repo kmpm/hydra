@@ -2,10 +2,37 @@ extends ../layout
 
 
 block content
-  table.table.table-striped
-    for task in tasklist
+  .btn-toolbar
+    .btn-group
+      .btn(data-actions="start")
+        i.icon-play
+      .btn(data-actions="stop")
+        i.icon-stop
+  .results
+  form#tasks
+    table.table.table-striped
       tr
-        td
-          span.caret
-          a(href="./#{task.name}")=task.name
-        td=task.status
+        th Task
+        th Beskrivning
+        th Version
+        th Status
+        th pid
+      for task in tasks
+        tr
+          td
+            input(type="checkbox", name="task", value="#{task.name}") 
+            |  &gt; 
+            a(href="./#{task.name}")=task.name
+          td=task.description
+          td=task.version
+          td
+           | #{task.running()}
+          td
+            - if(task.running())
+              | #{task.process.pid}
+
+block footer-scripts
+  script(src="/assets/js/jquery.actionbutton.js")
+  script(src="/assets/js/jquery.to_json.js");
+  script(src="/assets/js/tasks.js")
+
