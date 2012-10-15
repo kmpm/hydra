@@ -1,5 +1,5 @@
 
-var models = require('../lib/models');
+var models = require('hydra-models');
 
 /*
  * GET users listing.

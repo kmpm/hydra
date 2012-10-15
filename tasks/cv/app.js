@@ -2,13 +2,11 @@ var amqp = require('amqp')
   , Logger = require('devnull')
   , vm = require('vm');
 
-var WAITFOR=2;
+var models = require('hydra-models');
+
+var WAITFOR=1;
 
 var DEFAULTS = {
-  mongo:{
-    host:'localhost',
-    port: 27017,
-    dbname: 'hydra'}, 
   amqp:{
     host:'localhost',
     vhost:'/',
@@ -23,8 +21,7 @@ nconf.argv()
   .defaults(DEFAULTS);
 
 
-var numerics = require('./lib/numerics')
-  , Storage = require('./lib/storage');
+var numerics = require('./lib/numerics');
 
 
 
@@ -58,12 +55,6 @@ mq.on("ready", function(){
 });
 
 
-var storage = new Storage(nconf.get('mongo'));
-storage.on("ready", function(){
-  log.info("storage is ready");
-  main();
-});
-
 
 function ensureExchange(callback){
   mq.exchange(nconf.get("amqp:exchange"), {type:'topic', durable:true}, callback);
@@ -78,29 +69,35 @@ function ensureQueue(exchange, callback){
 
 
 function queueProcessor(message, headers, deliveryInfo) {
-  if(message.hasOwnProperty('key') && message.hasOwnProperty('raw')){
-    
-    var cv = currentValue(message);
-    log.debug("key:%s raw:%s cv:%s", message.key, message.raw, cv);
-    var doc = {raw:message.raw, status:'ok'};
-
-    if(cv){
-      doc.cv = cv;
-    }
-    else{
-      doc.status='bad data';
-    }
-    
-    storage.set(message.key, doc, function(err, res){
-      if(err){ log.error(err); }
-      if(cv) {
-        message.cv = cv;
-        message.status=doc.status;
-        exchange.publish('cv.'  + message.key, message);
-      }else{
-        exchange.publish('error.' + message.key, message);
+  if(message.hasOwnProperty('device') && message.hasOwnProperty('datastreams')){
+    var i, cv, stream;
+    for(i in message.datastreams){
+      stream = message.datastreams[i];
+      cv = currentValue(message.device, stream);
+      if(cv){
+        stream.cv = cv;
+        stream.status='ok';
       }
-    });
+      else{
+        stream.status='bad data';
+      }
+      models.Device.updateStreamValues(message.device, 
+        stream.name,
+        stream, 
+        function(err){
+          if(err){log.error(err);}
+          var out = {device:message.device, 
+            datastreams:[stream]
+          };
+          if(cv){
+            exchange.publish('cv.'  + message.device, out);
+          }
+          else{
+            exchange.publish('error.' + message.device, out);
+          }
+        });
+    }
+    
   }
   else{
     log.warning("bad raw:", message);
@@ -112,22 +109,25 @@ function loadCache(){
     if(result.status == 200){
       fcache = {};
       result.body.forEach(function(t){
-        fcache[t.name] = t.func_cv;
+        fcache[t.name] = {};
+        t.datastreams.forEach(function(d){
+          fcache[t.name][d.name]=d.func_cv;
+        });
       });
       console.log("fcache=", fcache);
     }
     else {
-      c.log.error("error getting cache", result);
+      log.error("error getting cache", result);
     }
   });
 }
 
-function currentValue(message){
-  if(fcache.hasOwnProperty(message.key)){
+function currentValue(devicename, datastream){
+  if(fcache.hasOwnProperty(devicename) && fcache[devicename].hasOwnProperty(datastream.name)){
     var sandbox = {
       numerics: numerics
     };
-    var code = "var callback = " + fcache[message.key];
+    var code = "var callback = " + fcache[devicename][datastream.name];
     try{
       vm.runInNewContext(code, sandbox);
     }
@@ -135,11 +135,11 @@ function currentValue(message){
       log.error("vm error!", err);
     }
     //log.debug(sandbox, code);
-    return sandbox.callback(message.raw);
+    return sandbox.callback(datastream.raw);
   }
   else{
-    log.warning("no current value function for %s", message.key)
-    return message.raw;
+    log.warning("no current value function for %s=>%s", devicename, datastream.name);
+    return datatream.raw;
   }
   
 }
@@ -151,5 +151,4 @@ function main(){
   queue.subscribe({prefetchCount: 5}, queueProcessor);
   loadCache();
   setInterval(loadCache, 60000);
-
 }

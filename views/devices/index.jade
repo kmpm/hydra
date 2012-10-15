@@ -4,26 +4,32 @@ extends ../layout
 block content
   a(href="./new").btn +
   table.table.table-striped
-    th Tag
-    th Status
+    th Device
+    th Beskrivning
     th Aktuellt värde
-    for tag in taglist
+    for device in devicelist
       tr
         td
           .btn-group
-            a.btn.btn-primary(href="#{tag._id}/")
+            a.btn.btn-primary(href="#{device._id}/")
               i.icon-tag.icon-white
-              |  #{tag.name}
+              |  #{device.name}
             a.btn.btn-primary.dropdown-toggle(data-toggle="dropdown", href="#")
               span.caret
             ul.dropdown-menu
               li  
-                a(href="#{tag._id}/delete", title="Radera")
+                a(href="#{device._id}/delete", title="Radera")
                   i.icon-trash 
                   |  Radera
               li
-                a(href="#{tag._id}/", title="Redigera")
+                a(href="#{device._id}/", title="Redigera")
                   i.icon-cog
                   |  Redigera
-        td=tag.status
-        td=tag.cv
+        td=device.description
+      tr
+        td(colspan="3")
+          .container-fluid
+          for stream in device.datastreams
+            .row-fluid
+              .span6=stream.name
+            

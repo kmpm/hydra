@@ -37,8 +37,8 @@ app.locals.title = 'Hydra';
 
 
 app.get('/', routes.index);
-app.get('/users', user.list);
-require('./routes/tags')(app, '/tags/');
+//app.get('/users', user.list);
+require('./routes/devices')(app, '/devices/');
 require('./routes/tasks')(app, '/tasks/');
 
 http.createServer(app).listen(app.get('port'), function(){

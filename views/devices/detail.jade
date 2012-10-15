@@ -3,9 +3,9 @@ extends ../layout
 block content
   form(method="post", action=".")
     dl.dl-horizontal
-      for field in tagform.visible
+      for field in deviceform.visible
         dt=field.title
         dd!=field.render()
-    for field in tagform.hidden
+    for field in deviceform.hidden
       !{field.render()}
     input.btn(type="submit")

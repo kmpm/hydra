@@ -4,14 +4,13 @@ var assert = require('assert')
 var request = require('supertest')
   , express = require('express');
 
-var storage = require('../lib/storage')
-  , tags = require('../routes/tags');
+var devices = require('../routes/devices');
 
 var app = express();
 app.set('view engine', 'jade');
-tags(app, '/tags/');
+devices(app, '/devices/');
 
-describe("routes/tags", function(){
+describe("routes/devices", function(){
   it("_wait for init", function(done){
     storage.ready(done);
   });
@@ -19,7 +18,7 @@ describe("routes/tags", function(){
   describe("GET /", function(){
     it('it responds with HTML', function(done){
       request(app)
-        .get("/tags/")
+        .get("/devices/")
         .expect(200, done);
     });
   });

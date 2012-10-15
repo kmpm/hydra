@@ -6,10 +6,6 @@ var log = new Logger();
 
 var nconf = require('nconf');
 var DEFAULTS = {
-  mongo:{
-    host:'localhost',
-    port: 27017,
-    dbname: 'hydra'}, 
   amqp:{
     host:'localhost',
     vhost:'/',
@@ -48,6 +44,10 @@ function main(){
   if(WAITFOR > 0 ) return;
 
   setInterval(function(){
-    exchange.publish('raw.sim.foo.bar', {key:'sim.foo.bar', at:Date.now(), raw:genRandNum()})
+    exchange.publish('raw.sim_foo', {device:'sim_foo', at:Date.now(), 
+        datastreams:[
+          {name:'bar', raw:genRandNum()},
+          {name:'spam', raw:genRandNum()}
+        ]});
   }, 15000);
 }

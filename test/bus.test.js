@@ -43,7 +43,7 @@ describe("Bus", function(){
 
     it("wait for execution", function(done){
       var first=true;
-      this.timeout(60000);
+      this.timeout(5000);
       bus.on('executed', function(message, reply){
         if (!first) return;
         process.nextTick(function(){

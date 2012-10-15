@@ -1,6 +1,7 @@
-var storage = require('../lib/storage')
+var models = require('hydra-models')
   , forms = require('../lib/forms')
   , c = require('../lib/common');
+
 
 
 function logerr(res, err){
@@ -10,7 +11,7 @@ function logerr(res, err){
 
 module.exports = function(app, prefix){
   app.all(prefix, function(req, res, next){
-    res.locals.title='Tags';
+    res.locals.title='Devices';
     next();
   });
 
@@ -19,21 +20,20 @@ module.exports = function(app, prefix){
   });
 
   app.get(prefix, function(req,res){
-    storage.getTagList(function(err, cursor){
-      if(err){
-        return res.send(500, err);
-      }
-      cursor.toArray(render);
-    });
+    var query = models.Device.find({});
+    query.select('_id name description datastreams._id datastreams.name');
+    query.exec(render);
+
     function render(err, list){
       if(err) return logerr(res, err);
-      res.render('tags', { taglist:list});  
+      console.log("list", list);
+      res.render('devices', { devicelist:list});  
     }
   });
 
   app.get(prefix+'new', function(req, res){
-    var doc=storage.createTag();
-    storage.saveTagMeta(doc, function(err, result){
+    var doc=new models.Device();
+    doc.save(function(err, result){
       if(err) return logerr(res, err);
       res.redirect(prefix + doc._id + '/');
     });
@@ -58,7 +58,7 @@ module.exports = function(app, prefix){
     else {
       switch(action){
         case 'delete':
-          storage.removeTagMeta(req.params.id, function(err, result){
+          models.Device.where('_id', req.params.id).remove(function(err, result){
             if(err) logerr(res, err);
             res.redirect(prefix);
           });
