@@ -41,7 +41,8 @@ var queue;
 var exchange;
 var fcache={};
 
-var rpc = new (require('./lib/amqprpc'))(mq);
+//var rpc = new (require('./lib/amqprpc'))(mq);
+var rpc = new (require('./lib/runtimerpc'))();
 
 mq.on("ready", function(){
   log.info("mq is ready");
@@ -68,35 +69,41 @@ function ensureQueue(exchange, callback){
 }
 
 
+/*
+   @message Object {device: ,stream:, raw}
+*/
 function queueProcessor(message, headers, deliveryInfo) {
-  if(message.hasOwnProperty('device') && message.hasOwnProperty('datastreams')){
-    var i, cv, stream;
-    for(i in message.datastreams){
-      stream = message.datastreams[i];
-      cv = currentValue(message.device, stream);
+  if(message.hasOwnProperty('device') && message.hasOwnProperty('stream')
+      && message.hasOwnProperty('raw')){
+    var i, cv;
+    var values = {raw: message.raw};
+    cv = currentValue(message);
+    if(cv){
+      message.cv = cv;
+      message.status='ok';
+      values.cv=cv;
+    }
+    else{
+      message.status='bad data';
+    }
+    values.status=message.status;
+
+    models.Device.updateStreamValues(message.device, 
+      message.stream,
+      values, saveDone);
+      
+
+    function saveDone(err){
+      if(err){log.error(err);}
+      var routing = message.device + '.' + message.stream;
       if(cv){
-        stream.cv = cv;
-        stream.status='ok';
+        exchange.publish('cv.'  + routing, message);
       }
       else{
-        stream.status='bad data';
+        exchange.publish('error.' + routing, message);
       }
-      models.Device.updateStreamValues(message.device, 
-        stream.name,
-        stream, 
-        function(err){
-          if(err){log.error(err);}
-          var out = {device:message.device, 
-            datastreams:[stream]
-          };
-          if(cv){
-            exchange.publish('cv.'  + message.device, out);
-          }
-          else{
-            exchange.publish('error.' + message.device, out);
-          }
-        });
     }
+    
     
   }
   else{
@@ -105,7 +112,10 @@ function queueProcessor(message, headers, deliveryInfo) {
 }
 
 function loadCache(){
-  rpc.makeRequest(exchange, 'rpc.server', {method:'getFuncCv', options:{}}, function(err, result){
+  //rpc.makeRequest(exchange, 'rpc.server', {method:'getFuncCv', options:{}}, function(err, result){
+  rpc.makeRequest({method:'getFuncCv', options:{}}, function(err, result){
+    if(err) return log.error("could not get cache %s", err);
+    console.log("err:%s, result:%j", err, result);
     if(result.status == 200){
       fcache = {};
       result.body.forEach(function(t){
@@ -122,12 +132,18 @@ function loadCache(){
   });
 }
 
-function currentValue(devicename, datastream){
-  if(fcache.hasOwnProperty(devicename) && fcache[devicename].hasOwnProperty(datastream.name)){
+/*
+   @message Object {device: ,stream:, raw}
+*/
+function currentValue(message){
+  var device = message.device;
+  var stream = message.stream;
+  var raw = message.raw;
+  if(fcache.hasOwnProperty(device) && fcache[device].hasOwnProperty(stream)){
     var sandbox = {
       numerics: numerics
     };
-    var code = "var callback = " + fcache[devicename][datastream.name];
+    var code = "var callback = " + fcache[device][stream];
     try{
       vm.runInNewContext(code, sandbox);
     }
@@ -135,14 +151,16 @@ function currentValue(devicename, datastream){
       log.error("vm error!", err);
     }
     //log.debug(sandbox, code);
-    return sandbox.callback(datastream.raw);
+    return sandbox.callback(raw);
   }
   else{
-    log.warning("no current value function for %s=>%s", devicename, datastream.name);
-    return datatream.raw;
+    log.warning("no current value function for %s=>%s", device, stream);
+    return raw;
   }
   
 }
+
+
 
 function main(){
   WAITFOR-=1;
