@@ -1,5 +1,6 @@
+var util = require('util');
 var models = require('hydra-models')
-  , forms = require('../lib/forms')
+  , forms = require('forms-mongoose')
   , c = require('../lib/common');
 
 
@@ -26,7 +27,6 @@ module.exports = function(app, prefix){
 
     function render(err, list){
       if(err) return logerr(res, err);
-      console.log("list", list);
       res.render('devices', { devicelist:list});  
     }
   });
@@ -39,20 +39,33 @@ module.exports = function(app, prefix){
     });
   });
 
-  app.all(prefix + ':id/:action?', function(req, res){
-    var action = req.params.action || 'show';
+  //get as specific stream
+  app.get(prefix + ':id/:stream', function(req, res){
+    models.Device.findOne({_id:req.params.id}, function(err, d){
+      res.render('devices/stream', {stream:d.datastreams.id(req.params.stream)});
+    });
+  });
 
-    if(req.method==='POST'){
+  app.all(prefix + ':id', function(req, res){
+    var action = req.query.action || 'show';
+
+    if(req.method === 'POST'){
       console.log("body", req.body);
-      load(function(err, form){
-        var obj = form.parse(req.body);
-        console.log("obj", obj);
-        storage.saveTagMeta(obj, function(err, result){
-          if(err) return render(err);
-          res.redirect(prefix);
-          //load(render);
-        });
-        
+      var f = forms.create(models.Device);
+      f.handle(req, {
+        success: function(form){
+          console.log("success", form.data);
+          models.Device.update({_id:req.params.id}, {$set:form.data}, function(err){
+            if(err) return logerr(res, err);
+            load(render);
+          });
+        },
+        error: function(form){
+          render(null, form);
+        },
+        empty: function(form){
+          render(null, form);
+        }
       });
     }
     else {
@@ -70,25 +83,21 @@ module.exports = function(app, prefix){
       
     }
     
-    function createForm(tag, callback){
-      var f = new forms.Form(tag, {hidden:['_id'], exclude:['raw', 'cv', 'status'],
-          widgets:{'func_cv': new forms.TextAreaWidget({"class":'span7'})},
-          order:['name'],
-          //exclude:['cosm']
-        }
-      );
-      callback(null, f);
+    function createForm(device, callback){
+      var f = forms.create(models.Device);
+      f = f.bind(device);
+      callback(null, f, device);
     }
 
     function load(callback){
-      storage.getTagMeta(req.params.id, function(err, tag){
+      models.Device.findOne({_id:req.params.id}, function(err, device){
         if(err) return render(err);
-        createForm(tag, callback);
+        createForm(device, callback);
       });
     }
-    function render(err, form){
+    function render(err, f, device){
       if(err) return res.send(500, err);
-      res.render('tags/detail', {tagform: form});
+      res.render('devices/detail', {deviceform: f, device:device});
     }
   });
 

@@ -3,10 +3,9 @@ extends ../layout
 
 block content
   a(href="./new").btn +
-  table.table.table-striped
+  table.table.table-striped.table-condensed
     th Device
     th Beskrivning
-    th Aktuellt värde
     for device in devicelist
       tr
         td
@@ -28,8 +27,8 @@ block content
         td=device.description
       tr
         td(colspan="3")
-          .container-fluid
           for stream in device.datastreams
             .row-fluid
-              .span6=stream.name
+              .span2=stream.name
+              .span2=stream.cv
             

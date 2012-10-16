@@ -21,10 +21,7 @@ var actions = {
 }
 
 $(document).ready(function(){
-  
-  
   $('body').actionbutton({actions:actions});
-
 });
 
 

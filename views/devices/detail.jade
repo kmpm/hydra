@@ -2,10 +2,26 @@ extends ../layout
 
 block content
   form(method="post", action=".")
-    dl.dl-horizontal
-      for field in deviceform.visible
-        dt=field.title
-        dd!=field.render()
-    for field in deviceform.hidden
-      !{field.render()}
+    | !{deviceform.toHTML()}
     input.btn(type="submit")
+
+  for stream in device.datastreams
+    .alert.load-html(data-stream="#{stream._id}")
+
+block footer-scripts
+  script
+    $('.load-html').each(function(){
+      var t = $(this);
+      var stream_id = t.data('stream');
+      var url = "./" + stream_id;
+      t.load(url, function(responseText, textStatus, xhr){
+        console.log(arguments);
+        bind_btn(stream_id);
+      });
+    });
+    function bind_btn(stream_id){
+      $('#' + stream_id +  ' .btn').on("click", function(event){
+        event.preventDefault();
+        alert("submit");
+      });
+    }
