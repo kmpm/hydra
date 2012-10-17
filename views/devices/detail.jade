@@ -1,27 +1,20 @@
-extends ../layout
+extends layout
 
 block content
-  form(method="post", action=".")
-    | !{deviceform.toHTML()}
-    input.btn(type="submit")
+  if device_id
+    form(method="post", action=".")
+  else
+    form(method="post", action="./new")
+    
+      | !{deviceform.toHTML()}
+      input.btn(type="submit")
 
-  for stream in device.datastreams
-    .alert.load-html(data-stream="#{stream._id}")
+    - if(device && device.datastreams)
+      for stream in device.datastreams
+        .alert.load-html(data-stream="#{stream._id}")
 
-block footer-scripts
+block append footer-scripts
   script
-    $('.load-html').each(function(){
-      var t = $(this);
-      var stream_id = t.data('stream');
-      var url = "./" + stream_id;
-      t.load(url, function(responseText, textStatus, xhr){
-        console.log(arguments);
-        bind_btn(stream_id);
-      });
-    });
-    function bind_btn(stream_id){
-      $('#' + stream_id +  ' .btn').on("click", function(event){
-        event.preventDefault();
-        alert("submit");
-      });
-    }
+    loadStreamHtml();
+
+    

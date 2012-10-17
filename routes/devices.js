@@ -31,13 +31,13 @@ module.exports = function(app, prefix){
     }
   });
 
-  app.get(prefix+'new', function(req, res){
-    var doc=new models.Device();
-    doc.save(function(err, result){
-      if(err) return logerr(res, err);
-      res.redirect(prefix + doc._id + '/');
-    });
-  });
+  // app.get(prefix+'new', function(req, res){
+  //   var doc=new models.Device();
+  //   doc.save(function(err, result){
+  //     if(err) return logerr(res, err);
+  //     res.redirect(prefix + doc._id + '/');
+  //   });
+  // });
 
   //get as specific stream
   app.get(prefix + ':id/:stream', function(req, res){
@@ -46,8 +46,18 @@ module.exports = function(app, prefix){
     });
   });
 
+
+  /*
+  * device
+  * @id  ObjectID || 'new'
+  */
   app.all(prefix + ':id', function(req, res){
     var action = req.query.action || 'show';
+    var device_id = req.params.id;
+    if(device_id === 'new') {
+      action='new';
+      device_id=null;
+    }
 
     if(req.method === 'POST'){
       console.log("body", req.body);
@@ -55,10 +65,14 @@ module.exports = function(app, prefix){
       f.handle(req, {
         success: function(form){
           console.log("success", form.data);
-          models.Device.update({_id:req.params.id}, {$set:form.data}, function(err){
-            if(err) return logerr(res, err);
-            load(render);
-          });
+          if (device_id) {
+            models.Device.update({_id:device_id}, {$set:form.data}, function(err){res.redirect(prefix)});
+          }
+          else {
+            var device = new models.Device(form.data);
+            device.save(function(err){res.redirect(prefix)});
+          }
+           
         },
         error: function(form){
           render(null, form);
@@ -71,10 +85,14 @@ module.exports = function(app, prefix){
     else {
       switch(action){
         case 'delete':
-          models.Device.where('_id', req.params.id).remove(function(err, result){
+          models.Device.where('_id', device_id).remove(function(err, result){
             if(err) logerr(res, err);
             res.redirect(prefix);
           });
+          break;
+        case 'new':
+          var f = forms.create(models.Device);
+          render(null, f);
           break;
         default:
           load(render);
@@ -83,21 +101,16 @@ module.exports = function(app, prefix){
       
     }
     
-    function createForm(device, callback){
-      var f = forms.create(models.Device);
-      f = f.bind(device);
-      callback(null, f, device);
-    }
-
     function load(callback){
-      models.Device.findOne({_id:req.params.id}, function(err, device){
+      models.Device.findOne({_id:device_id}, function(err, device){
         if(err) return render(err);
-        createForm(device, callback);
+        callback(device);
       });
     }
+
     function render(err, f, device){
       if(err) return res.send(500, err);
-      res.render('devices/detail', {deviceform: f, device:device});
+      res.render('devices/detail', {deviceform: f, device:device, device_id:device_id});
     }
   });
 
