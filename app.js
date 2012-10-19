@@ -9,7 +9,8 @@ var express = require('express')
   , http = require('http')
   , path = require('path');
 
-var Bus = require('./lib/bus');
+var Bus = require('./lib/bus')
+  , c = require('./lib/common');
 var bus = new Bus();
 
 var app = express();
@@ -42,5 +43,5 @@ require('./routes/devices')(app, '/devices/');
 require('./routes/tasks')(app, '/tasks/');
 
 http.createServer(app).listen(app.get('port'), function(){
-  console.log("Express server listening on port " + app.get('port'));
+  c.log.info("Express server listening on port " + app.get('port'));
 });
