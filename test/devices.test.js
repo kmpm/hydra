@@ -12,7 +12,7 @@ devices(app, '/devices/');
 
 describe("routes/devices", function(){
   it("_wait for init", function(done){
-    storage.ready(done);
+    done();
   });
 
   describe("GET /", function(){

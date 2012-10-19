@@ -15,7 +15,7 @@ describe("taskmgr", function(){
     });
   });
 
-  it("should have cv", function(done){
+  it("should have task named cv", function(done){
     this.timeout(7000);
     taskmgr.should.have.property('tasks');
     taskmgr.tasks.should.have.property('cv');
@@ -36,7 +36,7 @@ describe("taskmgr", function(){
     taskmgr.on("stopped", function(task){
       should.exist(task);
       task.should.have.property('name');
-      task.should.have.property('process');
+      task.should.not.have.property('process');
       done();
     });
   })
