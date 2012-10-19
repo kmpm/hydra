@@ -17,7 +17,7 @@ block content
               span.caret
             ul.dropdown-menu
               li  
-                a(href="#{device._id}/delete", title="Radera")
+                a(href="#{device._id}?action=delete", title="Radera")
                   i.icon-trash 
                   |  Radera
               li
@@ -27,7 +27,7 @@ block content
         td=device.description
       tr
         td(colspan="3")
-          for stream in device.datastreams
+          for stream in device.streams
             .row-fluid
               .span2=stream.name
               .span2=stream.cv

@@ -1,17 +1,17 @@
 extends layout
 
 block content
-  if device_id
-    form(method="post", action=".")
-  else
-    form(method="post", action="./new")
-    
-      | !{deviceform.toHTML()}
-      input.btn(type="submit")
+  p #{device_id}
+  form(method="post", action="#{action}")
+    | !{deviceform.toHTML()}
+    input.btn(type="submit")
 
-    - if(device && device.datastreams)
-      for stream in device.datastreams
-        .alert.load-html(data-stream="#{stream._id}")
+  - if(device && device.streams)
+    for stream in device.streams
+      .alert.load-html(data-stream="#{stream._id}")
+
+    .alert.load-html(data-stream="new")      
+      
 
 block append footer-scripts
   script

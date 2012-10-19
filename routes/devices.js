@@ -1,6 +1,5 @@
 var util = require('util');
 var models = require('hydra-models')
-  , forms = require('forms-mongoose')
   , c = require('../lib/common');
 
 
@@ -11,6 +10,13 @@ function logerr(res, err){
 }
 
 module.exports = function(app, prefix){
+
+  app.locals.new_stream = function(){
+    console.log("new_stream");
+    var d = new models.Device();
+    return d.streams.create();
+  }
+
   app.all(prefix, function(req, res, next){
     res.locals.title='Devices';
     next();
@@ -22,28 +28,13 @@ module.exports = function(app, prefix){
 
   app.get(prefix, function(req,res){
     var query = models.Device.find({});
-    query.select('_id name description datastreams._id datastreams.name');
+    query.select('_id name description streams._id streams.name');
     query.exec(render);
 
     function render(err, list){
       if(err) return logerr(res, err);
       res.render('devices', { devicelist:list});  
     }
-  });
-
-  // app.get(prefix+'new', function(req, res){
-  //   var doc=new models.Device();
-  //   doc.save(function(err, result){
-  //     if(err) return logerr(res, err);
-  //     res.redirect(prefix + doc._id + '/');
-  //   });
-  // });
-
-  //get as specific stream
-  app.get(prefix + ':id/:stream', function(req, res){
-    models.Device.findOne({_id:req.params.id}, function(err, d){
-      res.render('devices/stream', {stream:d.datastreams.id(req.params.stream)});
-    });
   });
 
 
@@ -54,6 +45,7 @@ module.exports = function(app, prefix){
   app.all(prefix + ':id', function(req, res){
     var action = req.query.action || 'show';
     var device_id = req.params.id;
+    c.log.debug("_id:%s, action=%s", device_id, action);
     if(device_id === 'new') {
       action='new';
       device_id=null;
@@ -61,10 +53,9 @@ module.exports = function(app, prefix){
 
     if(req.method === 'POST'){
       console.log("body", req.body);
-      var f = forms.create(models.Device);
+      var f = models.Device.createForm();
       f.handle(req, {
         success: function(form){
-          console.log("success", form.data);
           if (device_id) {
             models.Device.update({_id:device_id}, {$set:form.data}, function(err){res.redirect(prefix)});
           }
@@ -75,9 +66,11 @@ module.exports = function(app, prefix){
            
         },
         error: function(form){
+          c.log.warn("error in saving form");
           render(null, form);
         },
         empty: function(form){
+          c.log.warn("empty form");
           render(null, form);
         }
       });
@@ -91,7 +84,7 @@ module.exports = function(app, prefix){
           });
           break;
         case 'new':
-          var f = forms.create(models.Device);
+          var f = models.Device.createForm();
           render(null, f);
           break;
         default:
@@ -104,15 +97,43 @@ module.exports = function(app, prefix){
     function load(callback){
       models.Device.findOne({_id:device_id}, function(err, device){
         if(err) return render(err);
-        callback(device);
+        var f = models.Device.createForm();
+        f = f.bind(device);
+        callback(null, f, device);
       });
     }
 
     function render(err, f, device){
       if(err) return res.send(500, err);
-      res.render('devices/detail', {deviceform: f, device:device, device_id:device_id});
+      var action='.';
+      if(device_id === null) action='./new';
+      res.render('devices/detail', {deviceform: f, action:action, device:device, device_id:device_id});
     }
   });
 
+  //get as specific stream
+  app.get(prefix + ':id/:stream', function(req, res){
+    c.log.debug("get specific stream");
+    models.Device.findOne({_id:req.params.id}, function(err, d){
+      var f = models.Device.createStreamForm();
+      if(req.params.stream === 'new'){
+        render(d.streams.create(), f);
+      }
+      else {
+        render(d.streams.id(req.params.stream), f);
+      }
+    });
+
+    function render(stream, form){
+      form.bind(stream);
+      res.render('devices/stream', {stream:stream, form:form});  
+    }
+  });
+
+  app.get(prefix + ":id/:stream", function (req, res) {
+    models.Device.findOne({_id:req.params.id}, function(err, d){
+      throw new Error("not implemented");
+    });
+  });
   
 }
