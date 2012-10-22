@@ -1,12 +1,7 @@
 
-.row-fluid.stream(id="#{stream._id}")
-  form(id="form_#{stream._id}", action="./#{stream._id}")
-    | !{form.toHTML()}
+.stream(id="#{stream._id}")
+  form(id="form_#{stream._id}", action="./#{stream._id}", method="POST")
+    .fields
+      | !{form.toHTML()}
     button.btn(type="submit") Spara
-    //
-      .span6
-        input(name="name", value="#{stream.name}")
-      .span5
-        textarea(name="func_cv")=stream.func_cv
-      .span1
-        button.btn(type="submit") Spara
+    
