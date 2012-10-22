@@ -95,6 +95,7 @@ function queueProcessor(message, headers, deliveryInfo) {
 
     function saveDone(err){
       if(err){log.error(err);}
+      log.debug("updated value '%s.%s' to '%s'", message.device, message.stream, message.cv);
       var routing = message.device + '.' + message.stream;
       if(cv){
         exchange.publish('cv.'  + routing, message);
@@ -120,7 +121,7 @@ function loadCache(){
       fcache = {};
       result.body.forEach(function(t){
         fcache[t.name] = {};
-        t.datastreams.forEach(function(d){
+        t.streams.forEach(function(d){
           fcache[t.name][d.name]=d.func_cv;
         });
       });

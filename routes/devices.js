@@ -112,27 +112,37 @@ module.exports = function(app, prefix){
   });
 
   //get as specific stream
-  app.all(prefix + ':id/:stream', function(req, res){
+  app.all(prefix + ':device_id/:stream_id', function(req, res){
     c.log.debug("get specific stream");
-    models.Device.findOne({_id:req.params.id}, function(err, d){
+    models.Device.findOne({_id:req.params.device_id}, function(err, device){
       if(err){
-        c.log.warning("did not find device %s", req.params.id, err);
+        c.log.warning("did not find device %s", req.params.device_id, err);
       }
+      var stream;
       var f = models.Device.createStreamForm();
-      if(req.params.stream === 'new'){
-        render(d.streams.create(), f);
+      if(req.params.stream_id === 'new'){
+        stream = device.streams.create();
+        render(stream, f);
       }
       else {
+        stream = device.streams.id(req.params.stream_id);
         if(req.method === 'POST'){
           f.handle(req, {
             success:function(form){
               var data = form.data;
-              console.log("D=", data);
-              data._id = req.params.stream;
-
-              d.streams.push(data);
+              if(stream === null){
+                stream = {_id:req.params.stream_id};
+                device.streams.push(stream);
+                stream = device.streams.id(req.params.stream_id);
+              }
+              for(var key in data){
+                if(data.hasOwnProperty(key)){
+                  stream[key] = data[key];
+                }
+              }
+              console.log("stream=", stream);
               //possibly do a update instead of save
-              d.save();
+              device.save();
               done("success", form);
             },
             error:function(form){done("error", form);},
@@ -140,18 +150,20 @@ module.exports = function(app, prefix){
           });
           function done(msg, form){
             console.log(msg);
-            render(d.streams.id(req.params.stream), form);
+            render(stream, form);
           }
         }
         else{
-          render(d.streams.id(req.params.stream), f);
+          render(stream, f);
         }
       }
-    });
+    });//findOne
 
     function render(stream, form){
       try{
-        form = form.bind(stream);
+        if(form.hasOwnProperty("bind")){
+          form = form.bind(stream);
+        }
       }
       catch(err){
         c.log.error("binding error %j", stream);

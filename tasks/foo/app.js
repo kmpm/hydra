@@ -12,6 +12,7 @@ var DEFAULTS = {
     exchange:'hydra.topic'
   }
 }
+
 nconf.argv()
   .file('config.json')
   .defaults(DEFAULTS);
@@ -44,10 +45,8 @@ function main(){
   if(WAITFOR > 0 ) return;
 
   setInterval(function(){
-    exchange.publish('raw.sim_foo', {device:'sim_foo', at:Date.now(), 
-        datastreams:[
-          {name:'bar', raw:genRandNum()},
-          {name:'spam', raw:genRandNum()}
-        ]});
+    exchange.publish('raw.foo', {device:'foo', at:Date.now(), 
+        stream:'bar',
+        raw:genRandNum()});
   }, 15000);
 }
