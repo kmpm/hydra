@@ -5,12 +5,13 @@
 
 var express = require('express')
   , routes = require('./routes')
-  , user = require('./routes/user')
+  //, user = require('./routes/user')
   , http = require('http')
   , path = require('path');
 
-var Bus = require('./lib/bus')
-  , c = require('./lib/common');
+var c = require('./lib/common')
+  , Bus = require('./lib/bus');
+
 var bus = new Bus();
 
 var app = express();
