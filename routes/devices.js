@@ -28,11 +28,12 @@ module.exports = function(app, prefix){
 
   app.get(prefix, function(req,res){
     var query = models.Device.find({});
-    query.select('_id name description streams._id streams.name');
+    query.select('_id name description streams._id streams.name streams.cv streams.raw streams.unit');
     query.exec(render);
 
     function render(err, list){
       if(err) return logerr(res, err);
+      
       res.render('devices', { devicelist:list});  
     }
   });

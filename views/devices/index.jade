@@ -27,8 +27,15 @@ block content
         td=device.description
       tr
         td(colspan="3")
+          .row-fluid
+            .span2 Namn
+            .span2 Aktuellt värde
+            .span2 Rått värde
+            .span2 Enhet
           for stream in device.streams
             .row-fluid
               .span2=stream.name
               .span2=stream.cv
+              .span2=stream.raw
+              .span2=stream.unit
             
