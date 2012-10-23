@@ -42,7 +42,7 @@ var exchange;
 var fcache={};
 
 //var rpc = new (require('./lib/amqprpc'))(mq);
-var rpc = new (require('./lib/runtimerpc'))();
+var rpc = new (require('runtimerpc'))();
 
 mq.on("ready", function(){
   log.info("mq is ready");
