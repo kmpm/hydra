@@ -2,13 +2,27 @@ var crypto = require('crypto')
 
 var TIMEOUT=2000; //time to wait for response in ms
 
+var METHODS=['getConfig', 'getFuncCv'];
 
 exports = module.exports = RuntimeRpc;
 
 function RuntimeRpc(){
   var self = this;
   this.requests = {}; //hash to store request in wait for response
- 
+  
+  METHODS.forEach(function(m){
+    self[m] = function(options, callback){
+      self.makeRequest({method:m, options:options}, function(err, result){
+        if(result.status===200){
+          callback(null, result.body);
+        }
+        else{
+          callback(result);
+        }
+      });
+    }
+  });
+
   process.on('message', function(m){
     //get the correlationId
     var correlationId = m.correlationId;

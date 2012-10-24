@@ -1,4 +1,17 @@
 
+$(document).ready(function(){
+  loadTable();
+  $('.refresh').on('click', loadTable);
+});
+
+
+function loadTable(){
+  $('#devices').html('<img src="/assets/images/ajax-loader.gif">');
+  $('#devices').load(document.location.href, 
+      {fields:"_id name streams._id streams.name streams.cv streams.raw streams.unit streams.last_cv streams.status"}
+    );
+}
+
 $.fn.serializeObject = function()
 {
    var o = {};
@@ -37,3 +50,4 @@ function loadStreamHtml(){
     });
   });
 }
+

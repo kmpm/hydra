@@ -9,6 +9,10 @@ module.exports = function (app, prefix) {
   });
   
   app.get(prefix, function(req, res){
+    if(req.query.action && req.query.action==='refresh'){
+      taskmgr.refresh();
+      res.redirect(req.path);  
+    }
     res.render('tasks', {tasks:taskmgr.tasks});
   });
 
@@ -34,6 +38,12 @@ module.exports = function (app, prefix) {
       else if(req.body.action == 'stop') {
         task.stop();
         stopped.push(task.name);
+      }
+      else if(req.body.action == 'restart') {
+        task.restart();
+        stopped.push(task.name);
+       
+        started.push(task.name);
       }
     }
     setTimeout(function(){

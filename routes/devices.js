@@ -1,6 +1,7 @@
 var util = require('util');
-var models = require('hydra-models')
-  , c = require('../lib/common');
+var c = require('../lib/common')
+  , Extend = require('../lib/extend')
+  , models = c.models;
 
 
 
@@ -22,19 +23,27 @@ module.exports = function(app, prefix){
     next();
   });
 
-  app.get(prefix + '*', function (req, res, next){
-    next();
-  });
+  app.all(prefix, function(req,res){
+    var template='devices';
+    if(req.xhr){
+      template='devices/devicelist';
+      var fields = req.body.fields || '_id name description streams._id streams.name streams.cv streams.raw streams.unit';
+      c.log.debug("selected fields=%s", fields);
+      var query = models.Device.find({});
+      query.select(fields);
+      query.exec(function(err, list){
+        render(err, {devicelist:list});
+      });
+    }
+    else {
+      render(null);
+    }
+   
 
-  app.get(prefix, function(req,res){
-    var query = models.Device.find({});
-    query.select('_id name description streams._id streams.name streams.cv streams.raw streams.unit');
-    query.exec(render);
-
-    function render(err, list){
+    function render(err, extra){
       if(err) return logerr(res, err);
-      
-      res.render('devices', { devicelist:list});  
+      var payload =  Extend({xhr:req.xhr}, extra);
+      res.render(template, payload);  
     }
   });
 
@@ -67,11 +76,11 @@ module.exports = function(app, prefix){
            
         },
         error: function(form){
-          c.log.warn("error in saving form");
+          c.log.warning("error in saving form");
           render(null, form);
         },
         empty: function(form){
-          c.log.warn("empty form");
+          c.log.warning("empty form");
           render(null, form);
         }
       });

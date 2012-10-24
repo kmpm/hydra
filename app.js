@@ -36,7 +36,12 @@ app.configure('development', function(){
 });
 
 app.locals.title = 'Hydra';
-
+app.locals.usertime = function(d) {
+  if(typeof(d) === 'object' && typeof(d.getMonth) === 'function')
+    return d.toLocaleTimeString();
+  else
+    return "??:??";
+}
 
 app.get('/', routes.index);
 //app.get('/users', user.list);

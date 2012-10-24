@@ -2,63 +2,58 @@ var amqp = require('amqp')
   , Logger = require('devnull')
   , vm = require('vm');
 
-var models = require('hydra-models');
 
-var WAITFOR=1;
-
-var DEFAULTS = {
-  amqp:{
-    host:'localhost',
-    vhost:'/',
-    exchange:'hydra.topic'
-  }
-}
-
-var nconf = require('nconf');
-
-nconf.argv()
-  .file('config.json')
-  .defaults(DEFAULTS);
-
+var rpc = new (require('runtimerpc'))();
+var Models = require('hydra-models');
 
 var numerics = require('./lib/numerics');
 
+var WAITFOR=2;
+var amqp_config, models;
 
+rpc.getConfig('amqp', function(err, result){
+  if(err){
+    log.error("error getting config");
+    throw err;
+  }
+  amqp_config = result;
+  connect();
+});
 
-var MQ_HOST = nconf.get("amqp:host");
-
-var log = new Logger();
-
-// use the stream transport to log to a node.js stream
-log.use(require('devnull/transports/stream'), {
-    stream: require('fs').createWriteStream('hydra-cv.log')
+rpc.getConfig('mongo', function(err, result){
+  models = new Models(result);
+  main();
 });
 
 
 
-var mq = amqp.createConnection({host:MQ_HOST});
+var log = new Logger();
+
+
+var mq
 var queue;
 var exchange;
 var fcache={};
 
-//var rpc = new (require('./lib/amqprpc'))(mq);
-var rpc = new (require('runtimerpc'))();
+function connect(){
+  mq = amqp.createConnection({host:amqp_config.host});
 
-mq.on("ready", function(){
-  log.info("mq is ready");
-  ensureExchange(function(ex){
-    exchange=ex;
-    ensureQueue(ex, function(q){
-      queue=q;
-      main();
-    })
+  mq.on("ready", function(){
+    log.info("mq is ready");
+    ensureExchange(function(ex){
+      exchange=ex;
+      ensureQueue(ex, function(q){
+        queue=q;
+        main();
+      })
+    });
   });
-});
+}
 
 
 
 function ensureExchange(callback){
-  mq.exchange(nconf.get("amqp:exchange"), {type:'topic', durable:true}, callback);
+  mq.exchange(amqp_config.exchange, {type:'topic', durable:true}, callback);
 }
 
 function ensureQueue(exchange, callback){
@@ -82,6 +77,8 @@ function queueProcessor(message, headers, deliveryInfo) {
       message.cv = cv;
       message.status='ok';
       values.cv=cv;
+      values.last_cv = new Date();
+      message.last_cv = values.last_cv;
     }
     else{
       message.status='bad data';
@@ -114,23 +111,16 @@ function queueProcessor(message, headers, deliveryInfo) {
 
 function loadCache(){
   //rpc.makeRequest(exchange, 'rpc.server', {method:'getFuncCv', options:{}}, function(err, result){
-  rpc.makeRequest({method:'getFuncCv', options:{}}, function(err, result){
-    if(err) return log.error("could not get cache %s", err);
-    console.log("err:%s, result:%j", err, result);
-    if(result.status == 200){
-      fcache = {};
-      result.body.forEach(function(t){
-        fcache[t.name] = {};
-        t.streams.forEach(function(d){
-          if(d.func_cv.length >5 )
-            fcache[t.name][d.name]=d.func_cv;
-        });
+  rpc.getFuncCv({}, function(err, result){
+    if(err) { return log.error("could not get cache %s", err); }
+    fcache = {};
+    result.forEach(function(t){
+      fcache[t.name] = {};
+      t.streams.forEach(function(d){
+        if(d.func_cv.length >5 )
+          fcache[t.name][d.name]=d.func_cv;
       });
-      console.log("fcache=", fcache);
-    }
-    else {
-      log.error("error getting cache", result);
-    }
+    });
   });
 }
 

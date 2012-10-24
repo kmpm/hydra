@@ -17,7 +17,22 @@ var actions = {
         if(data.status=='ok') location.reload(true);
         callback();
       });
+  },
+  restart:function(button, callback){
+    $.post('.', 
+      with_tasks('restart'),
+      function(data){
+        $('.results').html(data.data);
+        if(data.status=='ok') location.reload(true);
+        callback();
+      });
+  },
+
+  "refresh-tasks":function(button, callback){
+    window.location = document.location.href + "?action=refresh"
+    callback(); 
   }
+
 }
 
 $(document).ready(function(){

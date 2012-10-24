@@ -1,0 +1,9 @@
+{
+  "name":"historian",
+  "version": "0.0.1",
+  "description": "archive values",
+  "dependencies": {
+    "amqp": "~0.1.4",
+    "devnull": "*"
+  }
+}

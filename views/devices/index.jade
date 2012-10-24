@@ -2,40 +2,12 @@ extends layout
 
 
 block content
-  a(href="./new").btn +
-  table.table.table-striped.table-condensed
-    th Device
-    th Beskrivning
-    for device in devicelist
-      tr
-        td
-          .btn-group
-            a.btn.btn-primary(href="#{device._id}/")
-              i.icon-tag.icon-white
-              |  #{device.name}
-            a.btn.btn-primary.dropdown-toggle(data-toggle="dropdown", href="#")
-              span.caret
-            ul.dropdown-menu
-              li  
-                a(href="#{device._id}?action=delete", title="Radera")
-                  i.icon-trash 
-                  |  Radera
-              li
-                a(href="#{device._id}/", title="Redigera")
-                  i.icon-cog
-                  |  Redigera
-        td=device.description
-      tr
-        td(colspan="3")
-          .row-fluid
-            .span2 Namn
-            .span2 Aktuellt värde
-            .span2 Rått värde
-            .span2 Enhet
-          for stream in device.streams
-            .row-fluid
-              .span2=stream.name
-              .span2=stream.cv
-              .span2=stream.raw
-              .span2=stream.unit
-            
+  .btn-toolbar
+    .btn-group
+      a(href="./new").btn
+        i.icon-plus
+      .btn.refresh
+        i.icon-refresh
+  #devices
+    
+  
