@@ -30,10 +30,10 @@ for device in devicelist
           th id
           for stream in device.streams
             tr
-              td=stream.name
+              td.data-name=stream.name
               td=stream.cv
               td=stream.raw
               td=stream.unit
               td=stream.status
               td=usertime(stream.last_cv)
-              td=stream._id
+              td.data-id=stream._id

@@ -26,3 +26,12 @@ div.fields .field {
   font-style: italic;
   font-weight: bold;
 }
+.data-id {
+  font-weight: bold;
+}
+td.data-name {
+  width: 10em;
+}
+td.data-id {
+  width: 15em;
+}
