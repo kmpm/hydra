@@ -35,16 +35,16 @@ function bind_stream_btn(stream_id){
     $this = $(this);
     
     $.post($this.attr('action'), $this.serialize(), function(data){
-      alert("success");
+      window.location.reload();
     });
   });
 }
 
-function loadStreamHtml(){
+function loadStreamHtml(device_id){
   $('.load-html').each(function(){
     var t = $(this);
     var stream_id = t.data('stream');
-    var url = "./" + stream_id;
+    var url = views.streams.prefix + stream_id + "?" + $.param({device_id:device_id});
     t.load(url, function(responseText, textStatus, xhr){
       bind_stream_btn(stream_id);
     });

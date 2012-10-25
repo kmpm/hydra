@@ -6,15 +6,15 @@ block content
     | !{deviceform.toHTML()}
     input.btn(type="submit")
 
-  - if(device && device.streams)
-    for stream in device.streams
-      .alert.load-html(data-stream="#{stream._id}")
-
-    .alert.alert-block.load-html(data-stream="new")      
+  #streams
+    if locals.device
+      for stream in device.streams
+        .alert.load-html(data-stream="#{stream}")
+      .alert.alert-block.load-html(data-stream="new")       
       
 
 block append footer-scripts
   script
-    loadStreamHtml();
+    loadStreamHtml('#{device_id}');
 
     

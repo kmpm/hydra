@@ -6,7 +6,6 @@
 var express = require('express')
   , routes = require('./routes')
   //, user = require('./routes/user')
-  , http = require('http')
   , path = require('path');
 
 var c = require('./lib/common')
@@ -36,6 +35,8 @@ app.configure('development', function(){
 });
 
 app.locals.title = 'Hydra';
+app.locals.views = {};
+
 app.locals.usertime = function(d) {
   if(typeof(d) === 'object' && typeof(d.getMonth) === 'function')
     return d.toLocaleTimeString();
@@ -46,8 +47,8 @@ app.locals.usertime = function(d) {
 app.get('/', routes.index);
 //app.get('/users', user.list);
 require('./routes/devices')(app, '/devices/');
+require('./routes/streams')(app, '/streams/');
 require('./routes/tasks')(app, '/tasks/');
 
-http.createServer(app).listen(app.get('port'), function(){
-  c.log.info("Express server listening on port " + app.get('port'));
-});
+
+module.exports = app;

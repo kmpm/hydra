@@ -26,10 +26,7 @@ rpc.getConfig('mongo', function(err, result){
 });
 
 
-
 var log = new Logger();
-
-
 var mq
 var queue;
 var exchange;
@@ -68,7 +65,7 @@ function ensureQueue(exchange, callback){
    @message Object {device: ,stream:, raw}
 */
 function queueProcessor(message, headers, deliveryInfo) {
-  if(message.hasOwnProperty('device') && message.hasOwnProperty('stream')
+  if(message.hasOwnProperty('stream')
       && message.hasOwnProperty('raw')){
     var i, cv;
     var values = {raw: message.raw};
@@ -85,15 +82,14 @@ function queueProcessor(message, headers, deliveryInfo) {
     }
     values.status=message.status;
 
-    models.Device.updateStreamValues(message.device, 
-      message.stream,
+    models.Stream.updateStreamValues(message.stream, 
       values, saveDone);
       
 
-    function saveDone(err){
+    function saveDone(err, stream){
       if(err){log.error(err);}
-      log.debug("updated cv value '%s.%s' to '%s'", message.device, message.stream, message.cv);
-      var routing = message.device + '.' + message.stream;
+      log.debug("updated cv value '%s' to '%s'", stream._id, message.cv);
+      var routing = message.stream;
       if(cv){
         exchange.publish('cv.'  + routing, message);
       }
@@ -114,13 +110,11 @@ function loadCache(){
   rpc.getFuncCv({}, function(err, result){
     if(err) { return log.error("could not get cache %s", err); }
     fcache = {};
-    result.forEach(function(t){
-      fcache[t.name] = {};
-      t.streams.forEach(function(d){
-        if(d.func_cv.length >5 )
-          fcache[t.name][d.name]=d.func_cv;
-      });
+    result.forEach(function(stream){
+      if(stream.func_cv.length >5 )
+        fcache[stream._id]=stream.func_cv;
     });
+    log.debug("fcache=%j", fcache);
   });
 }
 
@@ -128,14 +122,13 @@ function loadCache(){
    @message Object {device: ,stream:, raw}
 */
 function currentValue(message){
-  var device = message.device;
   var stream = message.stream;
   var raw = message.raw;
-  if(fcache.hasOwnProperty(device) && fcache[device].hasOwnProperty(stream)){
+  if(fcache.hasOwnProperty(stream)){
     var sandbox = {
       numerics: numerics
     };
-    var code = "var callback = " + fcache[device][stream];
+    var code = "var callback = " + fcache[stream];
     try{
       vm.runInNewContext(code, sandbox);
     }
@@ -146,10 +139,9 @@ function currentValue(message){
     return sandbox.callback(raw);
   }
   else{
-    log.warning("no current value function for %s=>%s", device, stream);
+    log.warning("no current value function for %s", stream);
     return raw;
   }
-  
 }
 
 

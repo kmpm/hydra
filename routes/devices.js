@@ -13,6 +13,8 @@ function logerr(res, err){
 
 module.exports = function(app, prefix){
 
+  app.locals.views.devices = {prefix:prefix};
+
   app.locals.new_stream = function(){
     console.log("new_stream");
     var d = new models.Device();
@@ -28,11 +30,9 @@ module.exports = function(app, prefix){
     var template='devices';
     if(req.xhr){
       template='devices/devicelist';
-      var fields = req.body.fields || '_id name description streams._id streams.name streams.cv streams.raw streams.unit';
-      c.log.debug("selected fields=%s", fields);
-      var query = models.Device.find({});
-      query.select(fields);
-      query.exec(function(err, list){
+      models.Device.find({})
+        .populate('streams')
+        .exec(function(err, list){
         render(err, {devicelist:list});
       });
     }
@@ -109,7 +109,6 @@ module.exports = function(app, prefix){
     
     function load(callback){
       var query = models.Device.findOne({_id:device_id})
-      .populate("streams")
       .exec(function(err, device){
         if(err) return render(err);
         var f = models.Device.createForm();
@@ -126,81 +125,6 @@ module.exports = function(app, prefix){
     }
   });
 
-  //get as specific stream
-  app.all(prefix + ':device_id/:stream_id', function(req, res){
-    c.log.debug("get specific stream");
-
-    async.parallel({
-      stream:function(callback){
-         models.Stream.findOne({_id:req.params.stream_id},callback);
-      },
-      device:function(callback){
-        models.Device.findOne({_id:req.params.device_id}, callback);
-      }
-    }, function(err, results){
-      if(err){
-        c.log.warning("some error occured", err);
-      }
-    });
-    
-    models.Device.findOne({_id:req.params.device_id}, function(err, device){
-      if(err){
-        c.log.warning("did not find device %s", req.params.device_id, err);
-      }
-      var stream;
-      var f = models.Stream.createForm();
-      if(req.params.stream_id === 'new'){
-        stream = device.streams.create();
-        render(stream, f);
-      }
-      else {
-        stream = device.streams.id(req.params.stream_id);
-        if(req.method === 'POST'){
-          f.handle(req, {
-            success:function(form){
-              var data = form.data;
-              if(stream === null){
-                stream = {_id:req.params.stream_id};
-                device.streams.push(stream);
-                stream = device.streams.id(req.params.stream_id);
-              }
-              for(var key in data){
-                if(data.hasOwnProperty(key)){
-                  stream[key] = data[key];
-                }
-              }
-              console.log("stream=", stream);
-              //possibly do a update instead of save
-              device.save();
-              done("success", form);
-            },
-            error:function(form){done("error", form);},
-            empty:function(form){done("empty", form);}
-          });
-          function done(msg, form){
-            console.log(msg);
-            render(stream, form);
-          }
-        }
-        else{
-          render(stream, f);
-        }
-      }
-    });//findOne
-
-    function render(stream, form){
-      try{
-        if(form.hasOwnProperty("bind")){
-          form = form.bind(stream);
-        }
-      }
-      catch(err){
-        c.log.error("binding error %j", stream);
-        throw err;
-      }
-      res.render('devices/stream', {stream:stream, form:form});  
-    }
-  });
 
   
   

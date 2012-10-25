@@ -1,0 +1,9 @@
+
+.stream(id="#{stream._id}")
+  form(id="form_#{stream._id}", action="#{views.streams.prefix}#{stream._id}", method="POST")
+    if locals.device_id
+      input(type="hidden", name="device_id", value="#{device_id}")
+    .fields
+      | !{form.toHTML()}
+    button.btn(type="submit") Save
+    

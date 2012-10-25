@@ -2,36 +2,56 @@
 
 var amqp = require('amqp')
   , Logger = require('devnull');
+var rpc = new (require('runtimerpc'))();
+var Models = require('hydra-models');
+
+
+
+
+var WAITFOR=2;
+var amqp_config, mq, exchange, models, streams;
+
+
 var log = new Logger();
 
-var nconf = require('nconf');
-var DEFAULTS = {
-  amqp:{
-    host:'localhost',
-    vhost:'/',
-    exchange:'hydra.topic'
+rpc.getConfig('amqp', function(err, result){
+  if(err){
+    log.error("error getting config");
+    throw err;
   }
-}
+  amqp_config = result;
+  connect();
+});
 
-nconf.argv()
-  .file('config.json')
-  .defaults(DEFAULTS);
+rpc.getConfig('mongo', function(err, result){
+  models = new Models(result);
 
-var mq = amqp.createConnection(nconf.get("amqp"));
-var exchange;
-
-
-mq.on("ready", function(){
-  log.info("mq is ready");
-  ensureExchange(function(ex){
-    exchange=ex;
+  models.Stream.find({name:'foo'}, function(err, list){
+    if(err) {
+      log.error("no streams found");
+      throw err;
+    }
+    streams = list;
+    log.debug("%s streams to process", streams.length);
     main();
-  });
+  }); 
 });
 
 
+function connect(){
+  mq = amqp.createConnection(amqp_config);
+  mq.on("ready", function(){
+    log.info("mq is ready");
+    ensureExchange(function(ex){
+      exchange=ex;
+      main();
+    });
+  });
+}
+
+
 function ensureExchange(callback){
-  mq.exchange(nconf.get("amqp:exchange"), {type:'topic', durable:true}, callback);
+  mq.exchange(amqp_config.exchange, {type:'topic', durable:true}, callback);
 }
 
 
@@ -45,8 +65,12 @@ function main(){
   if(WAITFOR > 0 ) return;
 
   setInterval(function(){
-    exchange.publish('raw.foo', {device:'foo', at:Date.now(), 
-        stream:'bar',
-        raw:genRandNum()});
+    streams.forEach(function(stream){
+      exchange.publish('raw.' + stream._id, {
+        stream: stream._id, 
+        at: Date.now(), 
+        raw: genRandNum()});
+    });
+    
   }, 15000);
 }
