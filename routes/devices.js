@@ -1,4 +1,5 @@
-var util = require('util');
+var util = require('util')
+  , async = require('async');
 var c = require('../lib/common')
   , Extend = require('../lib/extend')
   , models = c.models;
@@ -62,6 +63,8 @@ module.exports = function(app, prefix){
     }
 
     if(req.method === 'POST'){
+      if(! req.body)
+        c.log.warning("no form body");
       console.log("body", req.body);
       var f = models.Device.createForm();
       f.handle(req, {
@@ -71,7 +74,7 @@ module.exports = function(app, prefix){
           }
           else {
             var device = new models.Device(form.data);
-            device.save(function(err){res.redirect(prefix)});
+            device.save(function(err){res.redirect(prefix +  device._id)});
           }
            
         },
@@ -105,7 +108,9 @@ module.exports = function(app, prefix){
     }
     
     function load(callback){
-      models.Device.findOne({_id:device_id}, function(err, device){
+      var query = models.Device.findOne({_id:device_id})
+      .populate("streams")
+      .exec(function(err, device){
         if(err) return render(err);
         var f = models.Device.createForm();
         f = f.bind(device);
@@ -124,12 +129,26 @@ module.exports = function(app, prefix){
   //get as specific stream
   app.all(prefix + ':device_id/:stream_id', function(req, res){
     c.log.debug("get specific stream");
+
+    async.parallel({
+      stream:function(callback){
+         models.Stream.findOne({_id:req.params.stream_id},callback);
+      },
+      device:function(callback){
+        models.Device.findOne({_id:req.params.device_id}, callback);
+      }
+    }, function(err, results){
+      if(err){
+        c.log.warning("some error occured", err);
+      }
+    });
+    
     models.Device.findOne({_id:req.params.device_id}, function(err, device){
       if(err){
         c.log.warning("did not find device %s", req.params.device_id, err);
       }
       var stream;
-      var f = models.Device.createStreamForm();
+      var f = models.Stream.createForm();
       if(req.params.stream_id === 'new'){
         stream = device.streams.create();
         render(stream, f);
