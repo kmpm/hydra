@@ -1,43 +1,39 @@
-table.table.table-striped.table-condensed
-    th Device
-    th Beskrivning
-    for device in devicelist
-      tr
-        td
-          .btn-group
-            a.btn.btn-primary(href="#{device._id}/")
-              i.icon-tag.icon-white
-              |  #{device.name}
-            a.btn.btn-primary.dropdown-toggle(data-toggle="dropdown", href="#")
-              span.caret
-            ul.dropdown-menu
-              li  
-                a(href="#{device._id}?action=delete", title="Radera")
-                  i.icon-trash 
-                  |  Radera
-              li
-                a(href="#{device._id}/", title="Redigera")
-                  i.icon-cog
-                  |  Redigera
-        td=device.description
-      tr
-        td(colspan="3")
-          .row-fluid
-            .span2 Name
-            .span2 Current Value
-            .span2 Raw Value
-            .span2 Unit
-            .span1 Status
-            .span1 Last Value
-            .span2 id
-
+for device in devicelist
+  .row-fluid
+    .span3
+      .btn-group
+        a.btn.btn-primary(href="#{device._id}/")
+          i.icon-tag.icon-white
+          |  #{device.name}
+        a.btn.btn-primary.dropdown-toggle(data-toggle="dropdown", href="#")
+          span.caret
+        ul.dropdown-menu
+          li  
+            a(href="#{device._id}?action=delete", title="Radera")
+              i.icon-trash 
+              |  Radera
+          li
+            a(href="#{device._id}/", title="Redigera")
+              i.icon-cog
+              |  Redigera
+    .span7=device.description
+  .row-fluid
+    .span12
+      table.table.table-condensed.table-bordered.table-hover
+        tr
+          th Name
+          th Current Value
+          th Raw Value
+          th Unit
+          th Status
+          th Last Value
+          th id
           for stream in device.streams
-            .row-fluid
-              .span2
-                a(href="#{device._id}/#{stream.id}")=stream.name
-              .span2=stream.cv
-              .span2=stream.raw
-              .span2=stream.unit
-              .span1=stream.status
-              .span1=usertime(stream.last_cv)
-              .span1=stream._id
+            tr
+              td=stream.name
+              td=stream.cv
+              td=stream.raw
+              td=stream.unit
+              td=stream.status
+              td=usertime(stream.last_cv)
+              td=stream._id

@@ -1,3 +1,7 @@
+@highlight1: #C09853;
+@highlight1-bg: #FCF8E3;
+@highlight1-border: #FBEED5;
+
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
@@ -10,4 +14,33 @@ a {
 
 div.fields .field {
   float:left;
+}
+
+.rounded-corners(@radius: 4px) {
+  -webkit-border-radius: @radius;
+  -moz-border-radius: @radius;
+  -ms-border-radius: @radius;
+  -o-border-radius: @radius;
+  border-radius: @radius;
+}
+
+
+.hydra-subform {
+  padding: 8px 35px 8px 14px;
+  border:2px solid black;
+  background-color: @highlight1-bg;
+  border: 1px solid @highlight1-border;
+  color: @highlight1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  .rounded-corners;
+  margin-bottom:5px;
+}
+
+.field.required {
+  
+    label {
+      font-style:italic;
+      font-weight:bold;
+    }
+  
 }
