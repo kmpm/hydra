@@ -5,7 +5,9 @@ var amqp = require('amqp')
 
 var Models = require('hydra-models');
 
-var rpc = new Rpc();
+var rpc = new Rpc()
+  , log = new Logger();
+
 var amqp_config, mq, queue, exchange, models;
 
 var WAITFOR=2;
@@ -54,7 +56,7 @@ function queueProcessor(message, headers, deliveryInfo) {
     var at = message.last_cv || (new Date()).toJSON();
     var key = message.stream;
 
-    var sh = new models.StreamHistory({stream: message.stream, timestam:at, 
+    var sh = new models.StreamHistory({stream: message.stream, timestamp:at, 
       raw:message.raw,
       cv:message.cv,
       status:message.status
