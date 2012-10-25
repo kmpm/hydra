@@ -37,6 +37,10 @@ var actions = {
 
 $(document).ready(function(){
   $('body').actionbutton({actions:actions});
+  $('#selectall').on("change", function(){
+    var state = $(this).is(':checked');
+    $(".checkable").attr('checked', state);
+  });
 });
 
 

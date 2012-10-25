@@ -17,6 +17,8 @@ block content
   form#tasks
     table.table.table-striped
       tr
+        th 
+          input#selectall(type="checkbox", name="selectall")
         th Task
         th Description
         th Version
@@ -25,8 +27,8 @@ block content
       for task in tasks
         tr
           td
-            input(type="checkbox", name="task", value="#{task.name}") 
-            |  &gt; 
+            input.checkable(type="checkbox", name="task", value="#{task.name}") 
+          td
             a(href="./#{task.name}")=task.name
           td=task.description
           td=task.version
