@@ -2,22 +2,22 @@
   "name": "hydra",
   "version": "0.0.1",
   "description": "Event Logger",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": ".\\node_modules\\.bin\\_mocha",
-    "start": "node app"
+    "test": ".\\node_modules\\.bin\\mocha",
+    "start": "node server"
   },
   "author": "Peter Magnusson <peter@birchroad.net>",
   "license": "BSD",
   "dependencies": {
+    "async": "*",
+    "devnull": "*",
+    "nconf": "*",
     "amqp": ">=0.1.3",
     "forms-mongoose":"*",
     "express": "~3.0.0",
-    
     "jade": "*",
     "less-middleware": "*",
-    "devnull": "*",
-    "nconf": "*"
   },
   "devDependencies": {
     "mocha": "*",
