@@ -6,7 +6,7 @@ var amqp = require('amqp')
 var Models = require('hydra-models');
 
 var rpc = new Rpc();
-var amqp_config, mq, queue, exchange;
+var amqp_config, mq, queue, exchange, models;
 
 var WAITFOR=2;
 
@@ -49,13 +49,20 @@ function ensureQueue(exchange, callback){
 
 
 function queueProcessor(message, headers, deliveryInfo) {
-  if(message.hasOwnProperty('device') 
-      && message.hasOwnProperty('stream')
+  if(message.hasOwnProperty('stream')
       && message.hasOwnProperty('cv')){
+    var at = message.last_cv || (new Date()).toJSON();
+    var key = message.stream;
+
+    var sh = new models.StreamHistory({stream: message.stream, timestam:at, 
+      raw:message.raw,
+      cv:message.cv,
+      status:message.status
+    });
     
-    var at = message.last_at || (new Date()).toJSON();
-    var key = message.device + "." + message.stream;
-    
+    sh.save(function(err){
+      if(err) log.error(err);
+    });
   }
   else{
     log.warning("bad data:", message);
