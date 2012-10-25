@@ -15,12 +15,12 @@ describe("taskmgr", function(){
     });
   });
 
-  it("should have task named cv", function(done){
+  it("should have task named foo", function(done){
     this.timeout(7000);
     taskmgr.should.have.property('tasks');
-    taskmgr.tasks.should.have.property('cv');
+    taskmgr.tasks.should.have.property('foo');
     console.log("before start");
-    taskmgr.tasks.cv.start();
+    taskmgr.tasks.foo.start();
     
     taskmgr.on("started", function(task){
       should.exist(task);
