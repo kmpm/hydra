@@ -17,7 +17,7 @@
     "forms-mongoose":"*",
     "express": "~3.0.0",
     "jade": "*",
-    "less-middleware": "*",
+    "less-middleware": "*"
   },
   "devDependencies": {
     "mocha": "*",
