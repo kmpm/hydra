@@ -1,17 +1,24 @@
 extends layout
 
+block append extrahead
+  include ../datatables/header
+
+block append footer-scripts
+  include ../datatables/footer
+
 block content
-  table.table
+  table.table.as_dataTable
     thead
       tr
-        th Timestamp
+        th When
         th Raw
         th Status
         th Value
     tbody
       for rec in records
         tr
-          td=rec.timestamp
+          td=rec.date
           td=rec.raw
           td=rec.status
           td=rec.cv
+

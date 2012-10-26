@@ -1,0 +1,48 @@
+div.dataTables_length {
+  label {
+    float: left;
+    text-align: left;
+  }
+  select{
+    width: 75px;
+  }
+}
+
+dif.dataTables_filter {
+  label {
+    float: right;
+  }
+}
+
+div.dataTables_info {
+  padding-top: 8px;
+}
+
+div.dataTables_paginate {
+  float: right;
+  margin: 0;
+}
+
+
+.sorting-back(@img){
+  background: url('./media/images/@{img}') no-repeat center right;
+}
+
+table.as_dataTable{
+  clear: both;
+  margin-bottom: 6px !important;
+  thead {
+    .sorting,.sorting_asc,.sorting_desc,.sorting_asc_disabled,.sorting_desc_disabled {
+      cursor: pointer;
+      *cursor: hand;
+    }
+    .sorting      { .sorting-back('sort_both.png'); }
+    .sorting_asc  { .sorting-back('sort_asc.png'); }
+    .sorting_desc { .sorting-back('sort_desc.png'); }
+    .sorting_asc_disabled   { .sorting-back('sort_asc_disabled.png'); }
+    .sorting_desc_disabled  { .sorting-back('sort_desc_disabled.png'); }
+  }
+  th{
+    &:active { outline: none; }
+  }
+}
