@@ -30,7 +30,8 @@ for device in devicelist
           th id
           for stream in device.streams
             tr
-              td.data-name=stream.name
+              td.data-name
+                a(href="/streams/#{stream._id}/history")=stream.name
               td=stream.cv
               td=stream.raw
               td=stream.unit

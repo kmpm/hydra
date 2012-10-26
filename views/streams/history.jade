@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  table.table
+    thead
+      tr
+        th Timestamp
+        th Raw
+        th Status
+        th Value
+    tbody
+      for rec in records
+        tr
+          td=rec.timestamp
+          td=rec.raw
+          td=rec.status
+          td=rec.cv

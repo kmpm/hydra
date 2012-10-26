@@ -105,4 +105,22 @@ module.exports = function(app, prefix){
     }
   });
 
+  app.get(prefix + ':stream_id/history', function(req, res) {
+    models.StreamHistory.find({stream: req.stream._id})
+      .sort('timestamp')
+      .exec(function(err, records){
+        if(err) return logerr(res, err);
+        gotRecords(records);
+      });
+    function gotRecords(records){
+      if(req.is('json')){
+        res.json(records);
+      }
+      else{
+        res.render('streams/history', {stream:req.stream, records:records});
+      }
+
+    }
+  });
+
 };
