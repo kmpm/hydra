@@ -68,8 +68,10 @@ function queueProcessor(message, headers, deliveryInfo) {
   if(message.hasOwnProperty('stream')
       && message.hasOwnProperty('raw')){
     var i, cv;
+    var haveCV=false;
     var values = {raw: message.raw};
     cv = currentValue(message);
+
     if(typeof(cv) !== 'undefined' && cv !== null){
       message.cv = cv;
       message.status='ok';
@@ -88,12 +90,14 @@ function queueProcessor(message, headers, deliveryInfo) {
 
     function saveDone(err, stream){
       if(err){log.error(err);}
-      log.debug("updated cv value '%s' to '%s'", stream._id, message.cv);
+      log.debug("updated value '%s' to '%s'", stream._id, message.cv);
       var routing = message.stream;
-      if(typeof(cv) !== 'undefined' && cv !== null){
+      if(message.status === 'ok'){
+        log.debug("published cv for '%s'= '%s'", stream._id, message.cv);
         exchange.publish('cv.'  + routing, message);
       }
       else{
+        log.warning("status not ok for %s", stream._id);
         exchange.publish('error.' + routing, message);
       }
     }
