@@ -1,3 +1,64 @@
+@odd-color: #F9F9F9;
+@even-color: #FFF;
+
+
+//mixins
+.sorting-back(@img){
+  background: url('./media/images/@{img}') no-repeat center right;
+}
+
+
+/* generic dataTable */
+/*
+ * Table
+ */
+table.dataTable {
+  margin-bottom: 6px !important;
+  thead {
+    .sorting      { .sorting-back('sort_both.png'); }
+    .sorting_asc  { .sorting-back('sort_asc.png'); }
+    .sorting_desc { .sorting-back('sort_desc.png'); }
+    .sorting_asc_disabled   { .sorting-back('sort_asc_disabled.png'); }
+    .sorting_desc_disabled  { .sorting-back('sort_desc_disabled.png'); }
+    th {
+      padding: 3px 18px 3px 10px;
+      border-bottom: 1px solid black;
+      font-weight: bold;
+      cursor: pointer;
+      *cursor: hand;
+    }
+  }
+  tfoot th {
+    padding: 3px 18px 3px 10px;
+    border-top: 1px solid black;
+    font-weight: bold;
+  }
+  td {
+    padding: 3px 10px;
+    
+  }
+  tr {
+    &.odd { 
+      background-color:@odd-color; 
+      td {
+        &.sorting_1 { background-color: #D3D6FF; }
+        &.sorting_2 { background-color: #DADCFF; }
+        &.sorting_3 { background-color: #E0E2FF; }
+      }
+    }
+    &.even {
+      background-color:@even-color; 
+      td {
+        &.sorting_1 { background-color: #EAEBFF; }
+        &.sorting_2 { background-color: #F2F3FF; }
+        &.sorting_3 { background-color: #F9F9FF; }
+      }
+    }
+  }
+}
+
+
+
 div.dataTables_length {
   label {
     float: left;
@@ -24,25 +85,4 @@ div.dataTables_paginate {
 }
 
 
-.sorting-back(@img){
-  background: url('./media/images/@{img}') no-repeat center right;
-}
 
-table.as_dataTable{
-  clear: both;
-  margin-bottom: 6px !important;
-  thead {
-    .sorting,.sorting_asc,.sorting_desc,.sorting_asc_disabled,.sorting_desc_disabled {
-      cursor: pointer;
-      *cursor: hand;
-    }
-    .sorting      { .sorting-back('sort_both.png'); }
-    .sorting_asc  { .sorting-back('sort_asc.png'); }
-    .sorting_desc { .sorting-back('sort_desc.png'); }
-    .sorting_asc_disabled   { .sorting-back('sort_asc_disabled.png'); }
-    .sorting_desc_disabled  { .sorting-back('sort_desc_disabled.png'); }
-  }
-  th{
-    &:active { outline: none; }
-  }
-}
