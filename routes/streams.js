@@ -17,20 +17,44 @@ module.exports = function(app, prefix){
 
   app.locals.views.streams = {prefix:prefix};
 
+  app.param('stream_id', function(req, res, next, id){
+    c.log.debug("param stream_id = '%s'", id);
+    if(id==='new'){
+      found(null, new models.Stream());
+    }
+    else{
+      models.Stream.findById(id, function(err, stream){
+        found(err, stream);
+      });
+    }
+
+    function found(err, stream){
+      if(err) {
+        next(err);
+      }
+      else if (stream){
+        req.stream = stream;
+        next();
+      }
+      else{
+        if(id) {
+          var s = new models.Stream();
+          s._id = req.params.stream_id;
+          req.stream = stream;
+          next();
+        }
+        else{
+          next(new Error('failed to load stream'));  
+        }
+        
+      }
+    }
+  });
+
   app.all(prefix + ':stream_id', function(req, res){
 
     var device_id = req.query.device_id || req.body.device_id;
-    if(req.params.stream_id !== 'new')
-      models.Stream.findById(req.params.stream_id, function(err, stream){
-        if(! stream){
-          c.log.debug("empty stream %s", req.params.stream_id);
-          stream = new models.Stream();
-          stream._id = new models.Types.ObjectId(req.params.stream_id);
-        }
-        gotStream(err, stream);
-      });
-    else
-      gotStream(null, new models.Stream());
+    gotStream(null, req.stream)
 
     function gotStream(err, stream){
       if(err) return logerr(res, err);
