@@ -90,7 +90,7 @@ function queueProcessor(message, headers, deliveryInfo) {
       if(err){log.error(err);}
       log.debug("updated cv value '%s' to '%s'", stream._id, message.cv);
       var routing = message.stream;
-      if(cv){
+      if(typeof(cv) !== 'undefined' && cv !== null){
         exchange.publish('cv.'  + routing, message);
       }
       else{
