@@ -105,16 +105,21 @@ function queueProcessor(message, headers, deliveryInfo) {
   }
 }
 
-function loadCache(){
+function loadCache(callback){
+  callback = callback || function(){};
   //rpc.makeRequest(exchange, 'rpc.server', {method:'getFuncCv', options:{}}, function(err, result){
   rpc.getFuncCv({}, function(err, result){
-    if(err) { return log.error("could not get cache %s", err); }
+    if(err) { 
+      log.error("could not get cache %s", err); 
+      return callback();
+    }
     fcache = {};
     result.forEach(function(stream){
       if(stream.func_cv.length >5 )
         fcache[stream._id]=stream.func_cv;
     });
-    log.debug("fcache=%j", fcache);
+    callback();
+    //log.debug("fcache=%j", fcache);
   });
 }
 
@@ -149,8 +154,10 @@ function currentValue(message){
 function main(){
   WAITFOR-=1;
   if(WAITFOR > 0) return;
-  log.info("liftoff");
-  queue.subscribe({prefetchCount: 5}, queueProcessor);
-  loadCache();
+  loadCache(function(){
+    queue.subscribe({prefetchCount: 5}, queueProcessor);  
+  });
+  
+  
   setInterval(loadCache, 60000);
 }
