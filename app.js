@@ -38,10 +38,10 @@ app.locals.title = 'Hydra';
 app.locals.views = {};
 
 app.locals.date = function(date){
-  moment(date).format('YYYY-MM-DD hh:mm:ss');
+  return moment(date).format('YYYY-MM-DD HH:mm:ss');
 }
 app.locals.fromNow = function(date){
-  moment(date).fromNow()
+  return moment(date).fromNow()
 }
 
 app.locals.usertime = function(d) {

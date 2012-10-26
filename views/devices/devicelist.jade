@@ -36,5 +36,5 @@ for device in devicelist
               td=stream.raw
               td=stream.unit
               td=stream.status
-              td=usertime(stream.last_cv)
+              td=fromNow(stream.last_cv)
               td.data-id=stream._id
