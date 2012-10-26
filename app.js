@@ -2,11 +2,11 @@
 /**
  * Module dependencies.
  */
-
 var express = require('express')
   , routes = require('./routes')
-  //, user = require('./routes/user')
   , path = require('path');
+
+var moment = require('moment');
 
 var c = require('./lib/common')
   , Bus = require('./lib/bus');
@@ -36,6 +36,13 @@ app.configure('development', function(){
 
 app.locals.title = 'Hydra';
 app.locals.views = {};
+
+app.locals.date = function(date){
+  moment(date).format('YYYY-MM-DD hh:mm:ss');
+}
+app.locals.fromNow = function(date){
+  moment(date).fromNow()
+}
 
 app.locals.usertime = function(d) {
   if(typeof(d) === 'object' && typeof(d.getMonth) === 'function')
