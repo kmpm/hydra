@@ -70,7 +70,7 @@ function queueProcessor(message, headers, deliveryInfo) {
     var i, cv;
     var values = {raw: message.raw};
     cv = currentValue(message);
-    if(cv){
+    if(typeof(cv) !== 'undefined' && cv !== null){
       message.cv = cv;
       message.status='ok';
       values.cv=cv;
