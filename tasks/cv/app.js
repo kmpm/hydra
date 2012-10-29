@@ -103,23 +103,19 @@ function queueProcessor(message, headers, deliveryInfo) {
 
     function saveDone(err, streams){
       if(err){return log.error(err);}
-      var state = 'live';
       
       if(! streams.hasOwnProperty('updated') || ! streams.hasOwnProperty('previous')){
         log.error("Something is missing in %j", streams);
         return;
       }
-      var cvFromUpdated = streams.updated.last_updated - streams.updated.last_raw;
-      if(cvFromUpdated <  (5*60*1000*-1)){
-        state='frozen';
-      }
+      
       var payload = {
         stream: streams.previous._id,
         at: new Date(),
         raw: streams.updated.raw,
         cv: streams.updated.cv,
         status: message.status,
-        state: state,
+        state: streams.updated.state,
         last_cv: streams.updated.last_cv,
         last_raw: streams.updated.last_raw,
         previous_raw: streams.previous.raw,
@@ -198,7 +194,7 @@ function main(){
   WAITFOR-=1;
   if(WAITFOR > 0) return;
   loadCache(function(){
-    queue.subscribe({prefetchCount: 5}, queueProcessor);  
+    queue.subscribe({prefetchCount: 1}, queueProcessor);  
   });
   
   
