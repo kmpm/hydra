@@ -2,22 +2,32 @@ var crypto = require('crypto')
 
 var TIMEOUT=2000; //time to wait for response in ms
 
-var METHODS=['getConfig', 'getFuncCv'];
+
 
 exports = module.exports = RuntimeRpc;
 
-function RuntimeRpc(){
+function RuntimeRpc(methods){
   var self = this;
   this.requests = {}; //hash to store request in wait for response
   
-  METHODS.forEach(function(m){
-    self[m] = function(options, callback){
-      self.makeRequest({method:m, options:options}, function(err, result){
-        if(result.status===200){
-          callback(null, result.body);
+  methods.forEach(function(m){
+    self[m] = function(params, callback){
+      if(typeof(params) !== 'object'){
+        params = [params];
+      }
+      var rpcrequest = {
+        jsonrpc:"2.0",
+        method:m,
+        params:params,
+        id:crypto.randomBytes(16).toString('hex')
+      }
+      self.makeRequest(rpcrequest, function(err, response){
+        if(err) return callback(err);
+        if(! response.hasOwnProperty('error')){
+          callback(null, response.result);
         }
         else{
-          callback(result);
+          callback(response.error);
         }
       });
     }
@@ -25,7 +35,7 @@ function RuntimeRpc(){
 
   process.on('message', function(m){
     //get the correlationId
-    var correlationId = m.correlationId;
+    var correlationId = m.id;
     //is it a response to a pending request
     if(correlationId in self.requests){
       //retreive the request entry
@@ -43,7 +53,7 @@ function RuntimeRpc(){
 RuntimeRpc.prototype.makeRequest = function(content, callback){
   var self = this;
   //generate a unique correlation id for this call
-  var correlationId = crypto.randomBytes(16).toString('hex');
+  var correlationId = content.id;
   //create a timeout for what should happen if we don't get a response
   var tId = setTimeout(function(corr_id){
     //if this ever gets called we didn't get a response in a 

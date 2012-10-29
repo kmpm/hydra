@@ -7,8 +7,10 @@ var util = require('util')
 var AmqpRpc = require('amqprpc')
   RuntimeRpc = require('runtimerpc');
 
-var runtimerpc = new RuntimeRpc();
+var METHODS=['getConfig', 'getFuncCv', 'streamFind', 'streamUpdate'];
 
+
+var runtimerpc = new RuntimeRpc(METHODS);
 
 
 exports = module.exports = Runtime;
@@ -37,7 +39,7 @@ Runtime.prototype.connect = function(){
     self.log.info("mq is ready");
     self.ensureExchange(function(ex){
       self.exchange=ex;
-      self.rpc = new AmqpRpc(mq, ex);
+      self.rpc = new AmqpRpc(mq, ex, METHODS);
       self.emit("ready");
     });
   });
