@@ -11,6 +11,8 @@ var numerics = require('./lib/numerics');
 var WAITFOR=2;
 var amqp_config, models;
 
+var count=0;
+
 rpc.getConfig('amqp', function(err, result){
   if(err){
     log.error("error getting config");
@@ -65,47 +67,83 @@ function ensureQueue(exchange, callback){
    @message Object {device: ,stream:, raw}
 */
 function queueProcessor(message, headers, deliveryInfo) {
+  var c = count++;
   if(message.hasOwnProperty('stream')
       && message.hasOwnProperty('raw')){
     var i, cv;
     var haveCV=false;
-    var values = {raw: message.raw};
+    var values = {raw: message.raw, last_raw: message.at};
     cv = currentValue(message);
 
-    if(typeof(cv) !== 'undefined' && cv !== null){
+    if(typeof(cv) === 'undefined' || cv === null){
+      message.status='bad data';
+    }
+    else{
       message.cv = cv;
       message.status='ok';
       values.cv=cv;
-      values.last_cv = new Date();
-      message.last_cv = values.last_cv;
-    }
-    else{
-      message.status='bad data';
     }
     values.status=message.status;
 
-    models.Stream.updateStreamValues(message.stream, 
-      values, saveDone);
+    update();
+
+    function update(){
+      var set = {};
+      for(var key in values){
+        if(values.hasOwnProperty(key)){
+          set[key] = values[key];
+        }
+      }
+      log.debug("updating these %j", set);
+      models.Stream.findByIdAndUpdateWithPrevious(message.stream, 
+      set, saveDone);
+    }
+    
       
 
-    function saveDone(err, stream){
-      if(err){log.error(err);}
-      log.debug("updated value '%s' to '%s'", stream._id, message.cv);
-      var routing = message.stream;
-      if(message.status === 'ok'){
-        log.debug("published cv for '%s'= '%s'", stream._id, message.cv);
-        exchange.publish('cv.'  + routing, message);
+    function saveDone(err, streams){
+      if(err){return log.error(err);}
+      var state = 'live';
+      
+      if(! streams.hasOwnProperty('updated') || ! streams.hasOwnProperty('previous')){
+        log.error("Something is missing in %j", streams);
+        return;
       }
-      else{
-        log.warning("status not ok for %s", stream._id);
-        exchange.publish('error.' + routing, message);
+      var cvFromUpdated = streams.updated.last_updated - streams.updated.last_raw;
+      if(cvFromUpdated <  (5*60*1000*-1)){
+        state='frozen';
+      }
+      var payload = {
+        stream: streams.previous._id,
+        at: new Date(),
+        raw: streams.updated.raw,
+        cv: streams.updated.cv,
+        status: message.status,
+        state: state,
+        last_cv: streams.updated.last_cv,
+        last_raw: streams.updated.last_raw,
+        previous_raw: streams.previous.raw,
+        previous_cv: streams.previous.cv,
+        last_change: streams.updated.last_change,
+        since_last_change: (new Date()) - streams.updated.last_change,
+        changed: streams.updated.cv !== streams.previous.cv,
+        update_count: c
+      }
+
+      //log.debug(c + " sending cv payload %j", payload);
+      var routing = message.stream;
+      exchange.publish('cv.'  + routing, payload);
+      
+      if(message.status !== 'ok'){
+        log.warning(c+ " status not ok for %s", streams.previous._id);
+        exchange.publish('error.' + routing, payload);
       }
     }
     
     
   }
   else{
-    log.warning("bad raw:", message);
+    log.warning(c+ " bad raw:", message);
   }
 }
 
