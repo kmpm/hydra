@@ -126,7 +126,8 @@ function queueProcessor(message, headers, deliveryInfo) {
         previous_cv: streams.previous.cv,
         last_change: streams.updated.last_change,
         since_last_change: (new Date()) - streams.updated.last_change,
-        changed: streams.updated.cv !== streams.previous.cv,
+        changed_cv: streams.updated.cv !== streams.previous.cv,
+        changed_raw: streams.updated.raw !== streams.previous.raw,
         update_count: c
       }
 
