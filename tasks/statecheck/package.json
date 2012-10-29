@@ -1,0 +1,9 @@
+{
+  "name":"statecheck",
+  "version": "0.0.1",
+  "description": "check the state of stream values",
+  "dependencies": {
+    "amqp": "~0.1.4",
+    "devnull": "*"
+  }
+}
