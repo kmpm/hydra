@@ -11,7 +11,6 @@ var Models = require('hydra-models');
 var WAITFOR=2;
 var amqp_config, mq, exchange, models, streams;
 
-
 var log = new Logger();
 
 rpc.getConfig('amqp', function(err, result){
@@ -56,7 +55,9 @@ function ensureExchange(callback){
 
 
 function genRandNum() {
-  return (Math.floor(Math.random() * 90000) + 10000).toString();
+  //return 5;
+  return (Math.floor(Math.random() * 20) + 1).toString();
+
 }
 
 
@@ -66,10 +67,12 @@ function main(){
 
   setInterval(function(){
     streams.forEach(function(stream){
+      var value = genRandNum();
       exchange.publish('raw.' + stream._id, {
         stream: stream._id, 
         at: Date.now(), 
-        raw: genRandNum()});
+        raw: value});
+      log.debug("puslished %s for %s", value, stream._id);
     });
     
   }, 15000);
