@@ -10,7 +10,6 @@
   "author": "Peter Magnusson <peter@birchroad.net>",
   "license": "BSD",
   "dependencies": {
-    "engines" : { "node" : ">=0.8.12" },
     "async": "*",
     "devnull": "*",
     "nconf": "*",
@@ -25,5 +24,6 @@
     "mocha": "*",
     "should": "*",
     "supertest": "*"
-  }
+  },
+  "engine" : "node >=0.8.12 "
 }
