@@ -55,7 +55,7 @@ function updateState(r, state){
       update:{$set:{state:state}}}, function(err, result){
     if(err) return log.error(err);
     log.debug("update was ok %j", result);
-    runtime.publish('statechange.' + r._id, {
+    runtime.publish('statechange.' + r._id + '.' + state, {
       stream:r._id,
       to_state:state
     });
