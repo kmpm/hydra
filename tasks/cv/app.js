@@ -1,66 +1,30 @@
 var amqp = require('amqp')
-  , Logger = require('devnull')
   , vm = require('vm');
 
+var Runtime = require('runtime')
+  , Models = require('hydra-models')
+  , numerics = require('./lib/numerics');
 
-var rpc = new (require('runtimerpc'))();
-var Models = require('hydra-models');
+var runtime = new Runtime();
+var log = runtime.log;
 
-var numerics = require('./lib/numerics');
+
+var models, queue;
 
 var WAITFOR=2;
-var amqp_config, models;
-
-var count=0;
-
-rpc.getConfig('amqp', function(err, result){
-  if(err){
-    log.error("error getting config");
-    throw err;
-  }
-  amqp_config = result;
-  connect();
-});
-
-rpc.getConfig('mongo', function(err, result){
-  models = new Models(result);
-  main();
-});
-
-
-var log = new Logger();
-var mq
-var queue;
-var exchange;
 var fcache={};
-
-function connect(){
-  mq = amqp.createConnection({host:amqp_config.host});
-
-  mq.on("ready", function(){
-    log.info("mq is ready");
-    ensureExchange(function(ex){
-      exchange=ex;
-      ensureQueue(ex, function(q){
-        queue=q;
-        main();
-      })
-    });
+var count=0;
+runtime.on('ready', function(){
+  runtime.ensureQueue('hydra-raw', "raw.#", function(q){
+    queue=q;
+    main();
   });
-}
 
-
-
-function ensureExchange(callback){
-  mq.exchange(amqp_config.exchange, {type:'topic', durable:true}, callback);
-}
-
-function ensureQueue(exchange, callback){
-  mq.queue('hydra-raw', {exclusive:false, autoDelete:true}, function(q){
-    q.bind(exchange.name, 'raw.#');
-    callback(q);
-  });
-}
+  runtime.getConfig('mongo', function(err, result){
+    models = new Models(result);
+    main();
+  })
+});
 
 
 /*
@@ -129,15 +93,12 @@ function queueProcessor(message, headers, deliveryInfo) {
 
       //log.debug(c + " sending cv payload %j", payload);
       var routing = message.stream;
-      exchange.publish('cv.'  + routing, payload);
+      runtime.publish('cv.'  + routing, payload);
       
       if(message.status !== 'ok'){
-        log.warning(c+ " status not ok for %s", streams.previous._id);
-        exchange.publish('error.' + routing, payload);
+        runtime.publish('error.' + routing, payload);
       }
-    }
-    
-    
+    } 
   }
   else{
     log.warning(c+ " bad raw:", message);
@@ -147,7 +108,7 @@ function queueProcessor(message, headers, deliveryInfo) {
 function loadCache(callback){
   callback = callback || function(){};
   //rpc.makeRequest(exchange, 'rpc.server', {method:'getFuncCv', options:{}}, function(err, result){
-  rpc.getFuncCv({}, function(err, result){
+  runtime.rpc.getFuncCv({}, function(err, result){
     if(err) { 
       log.error("could not get cache %s", err); 
       return callback();
