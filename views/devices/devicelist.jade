@@ -26,7 +26,9 @@ for device in devicelist
           th Raw Value
           th Unit
           th Status
-          th Last Value
+          th State
+          th Updated
+          th Changed
           th id
           for stream in device.streams
             tr
@@ -36,5 +38,7 @@ for device in devicelist
               td=stream.raw
               td=stream.unit
               td=stream.status
+              td=stream.state
               td=fromNow(stream.last_cv)
+              td=fromNow(stream.last_change)
               td.data-id=stream._id
