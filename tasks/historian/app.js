@@ -1,52 +1,27 @@
-var Rpc = require('runtimerpc');
+var Runtime = require('runtime');
 
-var amqp = require('amqp')
-  , Logger = require('devnull');
+var runtime = new Runtime();
+var log = runtime.log;
 
 var Models = require('hydra-models');
 
-var rpc = new Rpc()
-  , log = new Logger();
-
-var amqp_config, mq, queue, exchange, models;
+var queue, models;
 
 var WAITFOR=2;
 
-rpc.getConfig('amqp', function(err, result){
-  if(err) throw err;
-  amqp_config = result;
-  connect();
-});
-
-rpc.getConfig('mongo', function(err, result){
-  models = new Models(result);
-  main();
-});
-
-function connect(){
-  mq = amqp.createConnection({host:amqp_config.host}); 
-  mq.on("ready", function(){
-    log.info("mq is ready");
-    ensureExchange(function(ex){
-      exchange=ex;
-      ensureQueue(ex, function(q){
-        queue=q;
-        main();
-      })
-    });
+runtime.on("ready", function(){
+  db();
+  runtime.ensureQueue('hydra-historian', 'cv.#', function(q){
+    queue = q;
+    main();
   });
-}
+})
 
-
-function ensureExchange(callback){
-  mq.exchange(amqp_config.exchange, {type:'topic', durable:true}, callback);
-}
-
-function ensureQueue(exchange, callback){
-  mq.queue('hydra-cosm', {exclusive:false, autoDelete:true}, function(q){
-    q.bind(exchange.name, 'cv.#');
-    callback(q);
-  });
+function db(){
+  runtime.getConfig('mongo', function(err, result){
+    models = new Models(result);
+    main();
+  });  
 }
 
 
