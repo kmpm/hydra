@@ -17,17 +17,6 @@ runtime.on("ready", function(){
 });
 
 
-// function updateToFrozen(){
-//   var d = new Date();
-//   d.setMinutes(d.getMinutes()-FROZEN_MINUTES);
-//   var options= {};
-//   options.conditions:{last_change: {$lt:d}, state:{$ne:"frozen"};
-//   options.update = :{$set:{state:'frozen'}}
-//   runtime.rpc.streamUpdate(options, function(err, result){
-//     log.debug("update was ok %j", result);
-//   });
-// }
-
 
 function checkLive(){
   var d = new Date();
