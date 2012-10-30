@@ -40,7 +40,7 @@ module.exports = function(app, prefix){
         if(id) {
           var s = new models.Stream();
           s._id = req.params.stream_id;
-          req.stream = stream;
+          req.stream = s;
           next();
         }
         else{
